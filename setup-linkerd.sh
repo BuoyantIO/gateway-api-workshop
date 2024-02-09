@@ -22,6 +22,11 @@
 # Start by installing Linkerd and Linkerd Viz. We'll use the latest stable
 # version.
 
+if [ "$DEMO_MESH" != "linkerd" ]; then \
+    echo "This script is for the Linkerd mesh only" >&2 ;\
+    exit 1 ;\
+fi
+
 curl --proto '=https' --tlsv1.2 -sSfL https://run.linkerd.io/install | sh
 
 linkerd check --pre
@@ -29,3 +34,12 @@ linkerd install --crds | kubectl apply -f -
 linkerd install | kubectl apply -f -
 linkerd viz install | kubectl apply -f -
 linkerd check
+
+# Once that's done, we can set up the namespace for Faces, annotated for
+# Linkerd injection. Sadly, we can't do the same for Envoy Gateway, since it
+# relies on a Job that will get hung up by the Linkerd sidecar -- KEP-753
+# makes this better, but it's not fully supported in Kubernetes prior to 1.28,
+# which is still a touch too new at the moment. Sigh.
+
+kubectl create namespace faces
+kubectl annotate namespace faces linkerd.io/inject=enabled
