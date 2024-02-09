@@ -17,22 +17,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Next up: install Emissary-ingress 3.1.0 as the ingress. This is mostly following
-# the quickstart, but we force every Deployment to one replica to reduce the load
-# on k3d.
-
-#@SHOW
-
-# Start by installing Linkerd. We'll use the latest stable version.
-
-curl --proto '=https' --tlsv1.2 -sSfL https://run.linkerd.io/install | sh
-
-linkerd check --pre
-linkerd install --crds | kubectl apply -f -
-linkerd install | kubectl apply -f -
-linkerd viz install | kubectl apply -f -
-linkerd check
-
 # After that, we'll install Emissary as an ingress controller. The choice
 # of ingress controller doesn't actually matter for this demo, we just need
 # one to make it easy to get access to the Faces demo.
