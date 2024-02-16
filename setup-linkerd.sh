@@ -41,5 +41,11 @@ linkerd check
 # makes this better, but it's not fully supported in Kubernetes prior to 1.28,
 # which is still a touch too new at the moment. Sigh.
 
-kubectl create namespace faces
-kubectl annotate namespace faces linkerd.io/inject=enabled
+kubectl apply -f - <<EOF
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: faces
+  annotations:
+    linkerd.io/inject: enabled
+EOF
