@@ -1,4 +1,4 @@
-#!/bin/env bash
+#!/usr/bin/env bash
 #
 # SPDX-FileCopyrightText: 2022 Buoyant Inc.
 # SPDX-License-Identifier: Apache-2.0
@@ -31,8 +31,8 @@ k3d cluster delete $CLUSTER &>/dev/null
 # Expose ports 80 and 443 to the local host, so that our ingress can work.
 # Also, don't install traefik, since we'll be putting Linkerd on instead.
 k3d cluster create $CLUSTER \
-    -p "80:80@loadbalancer" -p "443:443@loadbalancer" \
-    --k3s-arg '--disable=traefik@server:*;agents:*'
+	-p "80:80@loadbalancer" -p "443:443@loadbalancer" \
+	--k3s-arg '--disable=traefik@server:*;agents:*'
 
 #@wait
 #@HIDE
