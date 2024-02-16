@@ -77,7 +77,8 @@ kubectl rollout status -n envoy-gateway-system deploy
 helm install faces \
      -n faces \
      oci://registry-1.docker.io/dwflynn/faces-chart \
-     --version 0.8.0
+     --version 0.8.0 \
+   --set defaultImageTag=1.0.0-alpha
 
 # After that, wait for the Faces application to be ready...
 kubectl rollout status -n faces deploy
