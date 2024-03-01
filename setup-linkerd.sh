@@ -27,7 +27,7 @@ if [ "$DEMO_MESH" != "linkerd" ]; then \
     exit 1 ;\
 fi
 
-curl --proto '=https' --tlsv1.2 -sSfL https://run.linkerd.io/install | sh
+curl --proto '=https' --tlsv1.2 -sSfL https://run.linkerd.io/install-edge | sh
 
 linkerd check --pre
 linkerd install --crds | kubectl apply -f -

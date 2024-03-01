@@ -76,45 +76,13 @@ kubectl rollout status -n envoy-gateway-system deploy
 
 helm install faces \
      -n faces \
-     oci://registry-1.docker.io/dwflynn/faces-chart \
-     --version 0.8.0 \
-   --set defaultImageTag=1.0.0-alpha
+     oci://ghcr.io/buoyantio/faces-chart \
+     --version 1.0.0-alpha.1
+
+# Let's also set
 
 # After that, wait for the Faces application to be ready...
 kubectl rollout status -n faces deploy
 
 # ...after which we can install the Faces HTTPRoutes.
 kubectl apply -f k8s/01-base
-
-# while true; do
-#     EMISSARY_IP=$(kubectl -n emissary get svc emissary-ingress -o 'go-template={{range .status.loadBalancer.ingress}}{{or .ip .hostname}}{{end}}')
-#     if [ -n "$EMISSARY_IP" ]; then
-#         echo "Emissary IP: $EMISSARY_IP"
-#         break
-#     fi
-#     echo "...waiting for IP..."
-#     sleep 1
-# done
-
-# # If OVERRIDE_EMISSARY_IP is set, use its value instead.
-# if [ -n "$OVERRIDE_EMISSARY_IP" ]; then
-#     EMISSARY_IP=$OVERRIDE_EMISSARY_IP
-# fi
-
-# # Wait until the Faces application is actually talking to us.
-
-# REMAINING=60
-# while true; do \
-#     printf "." ;\
-#     status=$(curl -s -o /dev/null -w "%{http_code}" http://${EMISSARY_IP}/faces/) ;\
-#     if [ "$status" = "200" ]; then \
-#         echo "Faces ready!" ;\
-#         break ;\
-#     fi ;\
-#     REMAINING=$((REMAINING-1)) ;\
-#     if [ "$REMAINING" -le 0 ]; then \
-#         echo "Faces not ready after 60 seconds" ;\
-#         exit 1 ;\
-#     fi ;\
-#     sleep 1 ;\
-# done
