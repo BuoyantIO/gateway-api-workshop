@@ -77,7 +77,9 @@ kubectl rollout status -n envoy-gateway-system deploy
 helm install faces \
      -n faces \
      oci://ghcr.io/buoyantio/faces-chart \
-     --version 1.0.0-alpha.1
+     --version 1.0.0-alpha.1 \
+     --set face.errorFraction=0 \
+     --set backend.errorFraction=0
 
 # Let's also set
 
