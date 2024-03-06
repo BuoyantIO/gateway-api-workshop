@@ -6,7 +6,7 @@ metadata:
   namespace: faces
 spec:
   parentRefs:
-    - name: eg
+    - name: ingress
       namespace: default
   rules:
   - matches:
