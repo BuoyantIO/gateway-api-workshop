@@ -86,5 +86,9 @@ helm install faces \
 # After that, wait for the Faces application to be ready...
 kubectl rollout status -n faces deploy
 
+# In the demo, at least talk about the GatewayClass and Gateway ...maybe show
+# installing these as well? probably makes sense to just talk about it though
+
 # ...after which we can install the Faces HTTPRoutes.
-kubectl apply -f k8s/01-base
+# No -- show this in the demo
+# kubectl apply -f k8s/01-base
