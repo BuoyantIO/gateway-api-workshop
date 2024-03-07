@@ -1,8 +1,8 @@
-# Linkerd 2.13 Dynamic Request Routing and Circuit Breaking
+# Gateway API 1.0 Workshop
 
-This is the documentation - and executable code! - for the Service Mesh
-Academy workshop about what's coming in Linkerd 2.13. The easiest way to use
-this file is to execute it with [demosh].
+This is the documentation - and executable code! - for the Gateway API 1.0
+Workshop at KubeCon Paris 2024. The easiest way to use this file is to execute
+it with [demosh].
 
 Things in Markdown comments are safe to ignore when reading this later. When
 executing this with [demosh], things after the horizontal rule below (which
@@ -10,24 +10,17 @@ is just before a commented `@SHOW` directive) will get displayed.
 
 [demosh]: https://github.com/BuoyantIO/demosh
 
-For this workshop, you'll need a running Kubernetes cluster set up with
-Linkerd, Emissary, and the Faces app. You can use `create-cluster.sh` to
-create an appropriate `k3d` cluster, and `setup-demo.sh` to initialize it.
+For this workshop, you'll need a running, empty, Kubernetes cluster. You can
+use `create-cluster.sh` to create a k3d cluster that will work.
 
 <!-- set -e >
 <!-- @import demosh/check-requirements.sh -->
-<!-- @import demosh/demo-tools.sh -->
 
 <!-- @start_livecast -->
 
 ```bash
 BAT_STYLE="grid,numbers"
 ```
-
-You'll also want two web browsers running pointing to the Faces app at
-(assuming you used `create-cluster.sh` to set up your cluster)
-https://localhost/faces/ -- one normal one, and one using ModHeader or the
-like to set `X-Faces-User: testuser` for the canarying test.
 
 ---
 <!-- @SHOW -->
