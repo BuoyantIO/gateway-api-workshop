@@ -57,26 +57,23 @@ ready:
 kubectl cluster-info
 ```
 
-<!-- @wait -->
+Now, create the namespace for the Faces demo app.
+
+```sh
+kubectl apply -f k8s/namespaces.yaml
+```
+
 <!-- @clear -->
 Next, install your selected service mesh:
 
 <!-- @HIDE -->
-<!--
-```sh
-set -e
-./check-demo-hooks.sh
-set +e
-```
--->
-
 <!-- @hook linkerd LINKERD -->
 <details>
 <summary>Install Linkerd</summary>
 ```sh
 #@ifhook linkerd
 #@SHOW
-#@print Installing Linkerd
+./setup-linkerd.sh
 #@endif
 ```
 </details>
