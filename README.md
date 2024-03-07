@@ -1,17 +1,13 @@
-# Gateway API 1.0 Workshop
+# Configuring your service mesh with Gateway API
 
-This is the documentation - and executable code! - for the Gateway API 1.0
-Workshop at KubeCon Paris 2024. The easiest way to use this file is to execute
-it with [demosh].
+This is the documentation - and executable code! - for the Gateway API
+service mesh workshop at KubeCon EU 2024 in Paris, France.
 
+<!--
 Things in Markdown comments are safe to ignore when reading this later. When
 executing this with [demosh], things after the horizontal rule below (which
 is just before a commented `@SHOW` directive) will get displayed.
-
-[demosh]: https://github.com/BuoyantIO/demosh
-
-For this workshop, you'll need a running, empty, Kubernetes cluster. You can
-use `create-cluster.sh` to create a k3d cluster that will work.
+-->
 
 <!-- set -e >
 <!-- @import demosh/check-requirements.sh -->
@@ -21,10 +17,92 @@ use `create-cluster.sh` to create a k3d cluster that will work.
 ```bash
 BAT_STYLE="grid,numbers"
 ```
+<!-- @SKIP -->
+The easiest way to walk through this workshop is to install [demosh] and
+execute this file with an environment variable set to select the service
+mesh you wish to use. Start this workshop with either Linkerd or Istio by
+running one of the following commands:
+
+[demosh]: https://github.com/BuoyantIO/demosh
+
+```sh
+DEMO_HOOK_LINKERD=1 demosh README.md
+```
+
+OR
+
+```sh
+DEMO_HOOK_ISTIO=1 demosh README.md
+```
 
 ---
 <!-- @SHOW -->
+For this workshop, you'll need a running, empty, Kubernetes cluster.
 
+If you don't already have a cluster prepared, ensure you have the
+[Docker daemon] or compatible alternative running, [k3d] and [`kubectl`]
+installed, then run `./create-cluster.sh` in a new terminal to create a
+local k3d cluster.
+
+<!-- @HIDE -->
+[Docker daemon]: https://docs.docker.com/config/daemon/start/
+[`kubectl`]: https://kubernetes.io/docs/tasks/tools/#kubectl
+[k3d]: https://k3d.io/
+<!-- @SHOW -->
+
+Create your cluster if needed, then confirm we have a Kubernetes cluster
+ready:
+
+```sh
+kubectl cluster-info
+```
+
+<!-- @wait -->
+<!-- @clear -->
+Next, install your selected service mesh:
+
+<!-- @HIDE -->
+<!--
+```sh
+set -e
+./check-demo-hooks.sh
+set +e
+```
+-->
+
+<!-- @hook linkerd LINKERD -->
+<details>
+<summary>Install Linkerd</summary>
+```sh
+#@ifhook linkerd
+#@SHOW
+#@print Installing Linkerd
+#@endif
+```
+</details>
+
+<!-- @hook istio ISTIO -->
+<details>
+<summary>Install Istio</summary>
+```sh
+#@ifhook istio
+#@SHOW
+istioctl install -y
+#@endif
+```
+</details>
+
+<!-- @wait -->
+<!-- @clear -->
+<!-- @SHOW -->
+Now, install the Faces demo app:
+
+```sh
+./setup-demo.sh
+```
+
+<!-- @wait -->
+<!-- @clear -->
 # Dynamic Request Routing and Circuit Breaking
 
 Two significant new features in Linkerd 2.13 are dynamic request routing and

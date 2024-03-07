@@ -17,25 +17,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-clear
+set -e
 
-# Create a K3d cluster to run the Faces application.
-CLUSTER=${CLUSTER:-gateway-api-workshop}
-# echo "CLUSTER is $CLUSTER"
+if [[ -n ${DEMO_HOOK_LINKERD} && -n ${DEMO_HOOK_ISTIO} ]]; then
+	echo "Please set only DEMO_HOOK_LINKERD or DEMO_HOOK_ISTIO, not both."
+	exit 1
+elif [[ -z ${DEMO_HOOK_LINKERD} && -z ${DEMO_HOOK_ISTIO} ]]; then
+	echo "Please rerun with DEMO_HOOK_LINKERD=1 or DEMO_HOOK_ISTIO=1"
+	exit 1
+fi
 
-# Ditch any old cluster...
-k3d cluster delete $CLUSTER &>/dev/null
-
-#@SHOW
-
-# Expose ports 80 and 443 to the local host, so that our ingress can work.
-# Don't install traefik - we'll use Istio or Envoy Gateway with Linkerd instead.
-k3d cluster create $CLUSTER \
-	-p "80:80@loadbalancer" -p "443:443@loadbalancer" \
-	--k3s-arg '--disable=traefik@server:*;agents:*'
-
-#@wait
-#@HIDE
-
-# if [ -f images.tar ]; then k3d image import -c ${CLUSTER} images.tar; fi
-# #@wait
+set +e
