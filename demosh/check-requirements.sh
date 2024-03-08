@@ -17,7 +17,7 @@ check_ns() {
 check kubectl "https://kubernetes.io/docs/tasks/tools/"
 check bat "https://github.com/sharkdp/bat"
 check helm "https://helm.sh/docs/intro/quickstart/"
-check yq "https://github.com/mikefarah/yq?tab=readme-ov-file#install"
+# check yq "https://github.com/mikefarah/yq?tab=readme-ov-file#install"
 
 if [[ -n ${DEMO_HOOK_LINKERD} && -n ${DEMO_HOOK_ISTIO} ]]; then \
 	echo "Please set only DEMO_HOOK_LINKERD or DEMO_HOOK_ISTIO, not both." ;\
