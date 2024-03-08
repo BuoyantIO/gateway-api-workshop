@@ -17,10 +17,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -e
+
 if [ -z "$DEMO_HOOK_LINKERD" ]; then \
-	echo "This script is for the Linkerd mesh only" >&2 ;\
-	exit 1 ;\
+     echo "This script is for the Linkerd mesh only" >&2 ;\
+     exit 1 ;\
 fi
+
+set +e
 
 #@SHOW
 
@@ -42,13 +46,13 @@ kubectl rollout status -n envoy-gateway-system deploy
 # edge-23.11.4, will make this better -- but KEP-753 isn't in Kubernetes by
 # default until 1.28, and that's still a touch too new at the moment. Sigh.
 
-kubectl annotate ns envoy-gateway-system linkerd.io/inject=enabled
+kubectl annotate ns envoy-gateway-system linkerd.io/inject=ingress
 
 # Once that's done, install the GatewayClass and Gateway that Envoy Gateway
 # needs.
 
-bat envoy-gateway/gatewayclass-and-gateway.yaml
-kubectl apply -f envoy-gateway/gatewayclass-and-gateway.yaml
+bat linkerd/gatewayclass-and-gateway.yaml
+kubectl apply -f linkerd/gatewayclass-and-gateway.yaml
 
 # Finally, wait for the Envoy Gateway proxy to be ready.
 kubectl rollout status -n envoy-gateway-system deploy

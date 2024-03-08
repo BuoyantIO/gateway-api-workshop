@@ -16,3 +16,9 @@ spec:
     backendRefs:
     - name: face
       port: 80
+    filters:
+    - type: RequestHeaderModifier
+      requestHeaderModifier:
+        add:
+        - name: l5d-dst-override
+          value: face.faces.svc.cluster.local

@@ -1,0 +1,38 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: color
+  namespace: faces
+spec:
+  selector:
+    matchLabels:
+      service: color
+  template:
+    metadata:
+      labels:
+        service: color
+    spec:
+      containers:
+      - env:
+        - name: FACES_SERVICE
+          value: color
+        - name: COLOR
+          value: blue
+        - name: DELAY_BUCKETS
+          value: 0,5,10,15,20,50,200,500,1500
+        image: ghcr.io/buoyantio/faces-workload:1.0.0
+        imagePullPolicy: Always
+        name: color
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 250m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 64Mi
+      restartPolicy: Always

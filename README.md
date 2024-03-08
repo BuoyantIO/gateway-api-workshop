@@ -15,7 +15,9 @@ is just before a commented `@SHOW` directive) will get displayed.
 ```bash
 BAT_STYLE="grid,numbers"
 ```
+
 <!-- @SKIP -->
+
 The easiest way to walk through this workshop is to install [demosh] and
 execute this file with an environment variable set to select the service
 mesh you wish to use. Start this workshop with either Linkerd or Istio by
@@ -34,7 +36,7 @@ DEMO_HOOK_ISTIO=1 demosh README.md
 ```
 
 ---
-<!-- @SHOW -->
+
 For this workshop, you'll need a running, empty, Kubernetes cluster.
 
 If you don't already have a cluster prepared, ensure you have the
@@ -42,35 +44,46 @@ If you don't already have a cluster prepared, ensure you have the
 installed, then run `./create-cluster.sh` in a new terminal to create a
 local k3d cluster.
 
-<!-- @HIDE -->
 [Docker daemon]: https://docs.docker.com/config/daemon/start/
 [`kubectl`]: https://kubernetes.io/docs/tasks/tools/#kubectl
 [k3d]: https://k3d.io/
 
-<!-- @clear -->
 <!-- @SHOW -->
+<!-- @clear -->
 
-Create your cluster if needed, then confirm we have a Kubernetes cluster
-ready:
+# Configuring your service mesh with Gateway API
 
-```sh
-kubectl cluster-info
-```
+In this workshop, we'll be running the Faces demo application in a Kubernetes
+cluster, using a service mesh and an ingress controller that we'll configure
+using the Gateway API. Our choices here are
 
-Now, create the namespace for the Faces demo app.
+- Linkerd with Envoy Gateway, or
+- Istio (with Istio Gateway).
+
+We'll start by creating the namespace for Faces, to allow service-mesh setup
+to use it. Then we'll install the service mesh and the Gateway API CRDs, do
+any additional setup the ingress controller needs, and finally install the
+Faces application itself.
+
+<!-- @wait -->
+
+OK, off we go! Start by creating the namespace that we'll use for Faces.
 
 ```sh
 kubectl apply -f k8s/namespaces.yaml
 ```
 
-OK -- let's get the mesh installed!
+After that, it's time to install the mesh!
 
 ```bash
 #@immed
 if [[ -n ${DEMO_HOOK_LINKERD} ]]; then \
-    $SHELL setup-linkerd.sh ;\
+    $SHELL linkerd/install.sh ;\
 elif [[ -n ${DEMO_HOOK_ISTIO} ]]; then \
     $SHELL istio/install.sh ;\
+else \
+    echo "IMPOSSIBLE: no mesh selected" >&2 ;\
+    exit 1 ;\
 fi
 ```
 
@@ -84,18 +97,17 @@ using Gateway API CRDs that we don't want.
 kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.0.0/experimental-install.yaml
 ```
 
-<!-- @HIDE -->
-Linkerd needs to setup Envoy Gateway here, so if we're using Linkerd, off we go.
-
 ```bash
 #@immed
 if [[ -n ${DEMO_HOOK_LINKERD} ]]; then \
-    $SHELL setup-envoy-gateway.sh ;\
+    $SHELL linkerd/create-gateway.sh ;\
 elif [[ -n ${DEMO_HOOK_ISTIO} ]]; then \
     $SHELL istio/create-gateway.sh ;\
+else \
+    echo "IMPOSSIBLE: no mesh selected" >&2 ;\
+    exit 1 ;\
 fi
 ```
-<!-- @SHOW -->
 
 <!-- @wait_clear -->
 
@@ -113,22 +125,91 @@ helm install faces \
      --set backend.errorFraction=0
 ```
 
+We'll also install our `smiley2` and `color2` workloads. `smiley` returns a
+grinning face, while `smiley2` returns a heart-eyed smiley. `color` returns
+green, while `color2` returns blue. Neither `smiley2` nor `color2` will be
+receiving any traffic... yet.
+
+```bash
+kubectl apply -f smiley2.yaml
+kubectl apply -f color2.yaml
+```
+
 After that, wait for the Faces application to be ready...
 
 ```bash
 kubectl rollout status -n faces deploy
 ```
 
-...after which we can install the Faces HTTPRoutes.
+...after which we can install the Faces HTTPRoutes. First up: anything with a
+path starting with `/gui` should go to the `faces-gui` service. This gives
+your web browser a way to download the GUI code itself.
 
 ```bash
 bat k8s/01-base/gui-route.yaml
 kubectl apply -f k8s/01-base/gui-route.yaml
+```
+
+We also route anything with a path starting with `/face` to the `face`
+service. This is the path that the GUI uses to make requests for each cell.
+
+```bash
 bat k8s/01-base/face-route.yaml
 kubectl apply -f k8s/01-base/face-route.yaml
 ```
 
-OK, we're ready to go! If we open a web browser to http://localhost/faces/, we
+OK, we're ready to go! If we open a web browser to http://localhost/gui/, we
 should see the Faces GUI, showing all grinning faces on green backgrounds.
 
 <!-- @wait_clear -->
+
+# Canaries
+
+So far, so good! But what else can we do with Gateway API?
+
+The simplest next step is a canary: randomly assign some traffic to a new
+workload. This is the basis of progressive delivery, and it's a great way to
+get started with Gateway API.
+
+Let's start by sending 10% of the traffic for the `color` workload to the
+`color2` workload instead.
+
+```bash
+bat k8s/02-canary/color-canary-10.yaml
+```
+
+`color` returns green and `color2` returns blue, so this should be easy to see
+from the moment we apply the resource.
+
+```bash
+kubectl apply -f k8s/02-canary/color-canary-10.yaml
+```
+
+We can change the fraction of traffic being diverted in realtime, simply by
+changing the weights in the HTTPRoute:
+
+```bash
+diff -u99 --color k8s/02-canary/color-canary-{10,50}.yaml
+kubectl apply -f k8s/02-canary/color-canary-50.yaml
+```
+
+We can even use weights to divert all the traffic to the new workload, once
+we're happy that things are working, and delete the old workload entirely.
+
+```bash
+diff -u99 --color k8s/02-canary/color-canary-{50,100}.yaml
+kubectl apply -f k8s/02-canary/color-canary-100.yaml
+kubectl delete -n faces deploy/color
+```
+
+Operationally, of course, this isn't a great state to leave things in. It's
+smarter to go ahead and deploy our new workload as `color` and then remove the
+nonintuitive routing, so that people don't get confused when they look a week
+later after forgetting what was done.
+
+```bash
+bat color.yaml
+kubectl apply -f color.yaml
+kubectl rollout status -n faces deploy
+kubectl delete -n faces httproute color-canary
+```

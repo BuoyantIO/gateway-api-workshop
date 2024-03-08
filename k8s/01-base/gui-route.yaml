@@ -12,7 +12,7 @@ spec:
   - matches:
     - path:
         type: PathPrefix
-        value: /faces/
+        value: /gui/
     backendRefs:
     - name: faces-gui
       port: 80
