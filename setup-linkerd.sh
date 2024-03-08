@@ -22,9 +22,9 @@
 # Start by installing Linkerd and Linkerd Viz. We'll use the latest stable
 # version.
 
-if [ "$DEMO_MESH" != "linkerd" ]; then \
-    echo "This script is for the Linkerd mesh only" >&2 ;\
-    exit 1 ;\
+if [ -z "$DEMO_HOOK_LINKERD" ]; then
+	echo "This script is for the Linkerd mesh only" >&2
+	exit 1
 fi
 
 curl --proto '=https' --tlsv1.2 -sSfL https://run.linkerd.io/install-edge | sh
@@ -41,11 +41,4 @@ linkerd check
 # makes this better, but it's not fully supported in Kubernetes prior to 1.28,
 # which is still a touch too new at the moment. Sigh.
 
-kubectl apply -f - <<EOF
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: faces
-  annotations:
-    linkerd.io/inject: enabled
-EOF
+kubectl annotate namespace faces linkerd.io/inject="enabled"
