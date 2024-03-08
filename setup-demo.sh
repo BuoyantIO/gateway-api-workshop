@@ -34,50 +34,12 @@ set +e
 
 #@SHOW
 
-# Install the v1 Gateway API CRDs manually. This is a weird corner case at the
-# moment: Envoy Gateway 0.6.0 doesn't do this for us, but it _does_ require it.
-# Sigh.
-
-kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.0.0/standard-install.yaml
-
-# OK, go ahead and install Envoy Gateway as our ingress controller. We'll use Helm
-# for this.
-
-helm install envoy-gateway \
-     -n envoy-gateway-system --create-namespace \
-     oci://docker.io/envoyproxy/gateway-helm \
-     --version v0.6.0
-
-# After that, we'll wait for Envoy Gateway to be ready.
-kubectl rollout status -n envoy-gateway-system deploy
-
-# If we're using Linkerd, we now need to annotate the envoy-gateway-system
-# namespace for Linkerd injection. We can't do this earlier because Envoy
-# Gateway's boot sequence includes a Job that has to run to completion, and
-# the Linkerd sidecar gets in the way of that. KEP-753, supported in Linkerd
-# edge-23.11.4, will make this better -- but KEP-753 isn't in Kubernetes by
-# default until 1.28, and that's still a touch too new at the moment. Sigh.
-
-#@immed
-if [ "$DEMO_MESH" = "linkerd" ]; then \
-    echo "Annotating envoy-gateway-system for Linkerd injection" ;\
-    kubectl annotate ns envoy-gateway-system linkerd.io/inject=enabled ;\
-fi
-
-# Once that's done, install the GatewayClass and Gateway that Envoy Gateway
-# needs.
-
-kubectl apply -f envoy-gateway/gatewayclass-and-gateway.yaml
-
-# Finally, wait for the Envoy Gateway proxy to be ready.
-kubectl rollout status -n envoy-gateway-system deploy
-
 # Once that's done, install Faces. We'll use Helm for this, too.
 
 helm install faces \
      -n faces \
      oci://ghcr.io/buoyantio/faces-chart \
-     --version 1.0.0-alpha.1 \
+     --version 1.0.0 \
      --set face.errorFraction=0 \
      --set backend.errorFraction=0
 

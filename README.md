@@ -12,8 +12,6 @@ is just before a commented `@SHOW` directive) will get displayed.
 <!-- set -e >
 <!-- @import demosh/check-requirements.sh -->
 
-<!-- @start_livecast -->
-
 ```bash
 BAT_STYLE="grid,numbers"
 ```
@@ -63,43 +61,39 @@ Now, create the namespace for the Faces demo app.
 kubectl apply -f k8s/namespaces.yaml
 ```
 
-<!-- @clear -->
-Next, install your selected service mesh:
+<!-- @wait_clear -->
 
-<!-- @HIDE -->
-<!-- @hook linkerd LINKERD -->
-<details>
-<summary>Install Linkerd</summary>
-```sh
-#@ifhook linkerd
-#@SHOW
-./setup-linkerd.sh
-#@endif
+Next, let's get the mesh installed.
+
+```bash
+#@immed
+if [[ -n ${DEMO_HOOK_LINKERD} ]]; then \
+    $SHELL setup-linkerd.sh ;\
+else \
+    $SHELL setup-istio.sh ;\
+fi
 ```
-</details>
 
-<!-- @hook istio ISTIO -->
-<details>
-<summary>Install Istio</summary>
-```sh
-#@ifhook istio
-#@SHOW
-istioctl install -y
-#@endif
+<!-- @wait_clear -->
+
+OK, the mesh is running now, so let's install the Gateway API CRDs. We do this
+_after_ the mesh to make certain that the mesh installation isn't accidentally
+using Gateway API CRDs that we don't want.
+
+```bash
+kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.0.0/experimental-install.yaml
 ```
-</details>
 
-<!-- @wait -->
-<!-- @clear -->
-<!-- @SHOW -->
-Now, install the Faces demo app:
+<!-- @wait_clear -->
 
-```sh
+After that, we can install the Faces demo app.
+
+```bash
 ./setup-demo.sh
 ```
 
-<!-- @wait -->
-<!-- @clear -->
+<!-- @wait_clear -->
+
 # Dynamic Request Routing and Circuit Breaking
 
 Two significant new features in Linkerd 2.13 are dynamic request routing and
