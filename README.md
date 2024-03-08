@@ -69,8 +69,8 @@ OK -- let's get the mesh installed!
 #@immed
 if [[ -n ${DEMO_HOOK_LINKERD} ]]; then \
     $SHELL setup-linkerd.sh ;\
-else \
-    $SHELL setup-istio.sh ;\
+elif [[ -n ${DEMO_HOOK_ISTIO} ]]; then \
+    $SHELL istio/install.sh ;\
 fi
 ```
 
@@ -91,6 +91,8 @@ Linkerd needs to setup Envoy Gateway here, so if we're using Linkerd, off we go.
 #@immed
 if [[ -n ${DEMO_HOOK_LINKERD} ]]; then \
     $SHELL setup-envoy-gateway.sh ;\
+elif [[ -n ${DEMO_HOOK_ISTIO} ]]; then \
+    $SHELL istio/create-gateway.sh ;\
 fi
 ```
 <!-- @SHOW -->
