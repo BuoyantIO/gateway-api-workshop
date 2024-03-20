@@ -94,7 +94,15 @@ _after_ the mesh to make certain that the mesh installation isn't accidentally
 using Gateway API CRDs that we don't want.
 
 ```bash
-kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.0.0/experimental-install.yaml
+#@HIDE
+if [[ -z ${DEMO_HOOK_OFFLINE} || -n ${DEMO_HOOK_DOWNLOAD_GATEWAY_API} ]]; then \
+  #@SHOW ;\
+  curl -LO https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.0.0/experimental-install.yaml ;\
+  #@HIDE ;\
+fi
+#@SHOW
+
+kubectl apply -f experimental-install.yaml
 ```
 
 ```bash

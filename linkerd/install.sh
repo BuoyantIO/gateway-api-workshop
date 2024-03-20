@@ -27,14 +27,9 @@ fi
 # Start by installing Linkerd and Linkerd Viz. We'll use the latest edge
 # release for this.
 
-#@HIDE
-if [[ -z ${DEMO_HOOK_OFFLINE} ]]; then \
-  #@SHOW ;\
-  curl --proto '=https' --tlsv1.2 -sSfL https://run.linkerd.io/install-edge | sh ;\
-  #@HIDE ;\
-fi
+curl --proto '=https' --tlsv1.2 -sSfL https://run.linkerd.io/install-edge | sh
 
-#@SHOW
+which linkerd
 
 linkerd check --pre
 linkerd install --crds | kubectl apply -f -

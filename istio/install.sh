@@ -27,13 +27,19 @@ fi
 # Start by installing Istio. We'll use the latest stable version.
 
 #@HIDE
-if [[ -z ${DEMO_HOOK_OFFLINE} ]]; then \
+if [[ -z ${DEMO_HOOK_OFFLINE} || -n ${DEMO_HOOK_DOWNLOAD_ISTIO} ]]; then \
   #@SHOW ;\
   curl -L https://istio.io/downloadIstio | ISTIO_VERSION=1.20.3 sh - ;\
   #@HIDE ;\
 fi
 
 export PATH=$PWD/istio-1.20.3/bin:$PATH
+
+#@SHOW
+
+which istioctl
+
+istioctl version
 
 istioctl x precheck
 
