@@ -36,7 +36,6 @@ fi
 export PATH=$PWD/istio-1.20.3/bin:$PATH
 
 #@SHOW
-
 which istioctl
 
 istioctl version
