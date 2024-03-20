@@ -67,6 +67,14 @@ Faces application itself.
 
 <!-- @wait -->
 
+First, we'll confirm that we're using the Kuberetes cluster we expect.
+
+```bash
+kubectl cluster-info
+```
+
+<!-- @wait -->
+
 OK, off we go! Start by creating the namespace that we'll use for Faces.
 
 ```sh
