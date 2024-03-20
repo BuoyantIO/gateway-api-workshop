@@ -34,6 +34,12 @@ k3d cluster create $CLUSTER \
 	-p "80:80@loadbalancer" -p "443:443@loadbalancer" \
 	--k3s-arg '--disable=traefik@server:*;agents:*'
 
+# Import cached images from local registry
+k3d image import -c $CLUSTER \
+  docker.io/istio/proxyv2:1.20.3 \
+  docker.io/istio/pilot:1.20.3 \
+  ghcr.io/buoyantio/faces-workload:1.0.0
+
 #@wait
 #@HIDE
 
