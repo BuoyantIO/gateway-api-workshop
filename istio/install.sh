@@ -17,7 +17,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if [ -z "$DEMO_HOOK_ISTIO" ]; then \
+if [[ -z ${DEMO_HOOK_ISTIO} ]]; then \
 	echo "This script is for the Istio mesh only" >&2 ;\
 	exit 1 ;\
 fi
@@ -26,10 +26,17 @@ fi
 
 # Start by installing Istio. We'll use the latest stable version.
 
-curl -L https://istio.io/downloadIstio | ISTIO_VERSION=1.20.3 sh -
+#@HIDE
+if [[ -z ${DEMO_HOOK_OFFLINE} ]]; then \
+  #@SHOW ;\
+  curl -L https://istio.io/downloadIstio | ISTIO_VERSION=1.20.3 sh - ;\
+  #@HIDE ;\
+fi
 
 export PATH=$PWD/istio-1.20.3/bin:$PATH
+
 istioctl x precheck
+
 istioctl install --set profile=minimal -y
 
 # Once that's done, we can set up the namespace for Faces, annotated for
