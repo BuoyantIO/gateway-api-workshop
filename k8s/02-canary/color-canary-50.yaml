@@ -7,13 +7,13 @@ spec:
   parentRefs:
     - name: color
       kind: Service
-      group: core
+      group: ""
       port: 80
   rules:
-  - backendRefs:
-    - name: color
-      port: 80
-      weight: 50
-    - name: color2
-      port: 80
-      weight: 50
+    - backendRefs:
+        - name: color
+          port: 80
+          weight: 50
+        - name: color2
+          port: 80
+          weight: 50

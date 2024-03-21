@@ -7,11 +7,11 @@ spec:
   parentRefs:
     - name: color
       kind: Service
-      group: core
+      group: ""
       port: 80
   rules:
-  - backendRefs:
-    - name: color
-      port: 80
-    timeouts:
-      request: 300ms
+    - backendRefs:
+        - name: color
+          port: 80
+      timeouts:
+        request: 300ms

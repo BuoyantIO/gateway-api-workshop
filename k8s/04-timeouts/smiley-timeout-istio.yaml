@@ -1,4 +1,4 @@
-apiVersion: policy.linkerd.io/v1beta3
+tapiVersion: policy.linkerd.io/v1beta3
 kind: HTTPRoute
 metadata:
   name: smiley-timeout
@@ -7,11 +7,11 @@ spec:
   parentRefs:
     - name: smiley
       kind: Service
-      group: core
+      group: ""
       port: 80
   rules:
-  - backendRefs:
-    - name: smiley
-      port: 80
-    timeouts:
-      request: 300ms
+    - backendRefs:
+        - name: smiley
+          port: 80
+      timeouts:
+        request: 300ms

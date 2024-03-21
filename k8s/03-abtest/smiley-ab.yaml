@@ -7,16 +7,16 @@ spec:
   parentRefs:
     - name: smiley
       kind: Service
-      group: core
+      group: ""
       port: 80
   rules:
-  - matches:
-    - headers:
-      - name: "x-faces-user"
-        value: "testuser"
-    backendRefs:
-      - name: smiley2
-        port: 80
-  - backendRefs:
-    - name: smiley
-      port: 80
+    - matches:
+        - headers:
+            - name: "x-faces-user"
+              value: "testuser"
+      backendRefs:
+        - name: smiley2
+          port: 80
+    - backendRefs:
+        - name: smiley
+          port: 80

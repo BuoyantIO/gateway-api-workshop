@@ -7,13 +7,13 @@ spec:
   parentRefs:
     - name: smiley
       kind: Service
-      group: core
+      group: ""
       port: 80
   rules:
-  - backendRefs:
-    - name: smiley
-      port: 80
-      weight: 50
-    - name: smiley2
-      port: 80
-      weight: 50
+    - backendRefs:
+        - name: smiley
+          port: 80
+          weight: 50
+        - name: smiley2
+          port: 80
+          weight: 50
