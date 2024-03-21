@@ -369,3 +369,15 @@ kubectl apply -f k8s/04-timeouts/face-route.yaml
 
 We should now start seeing counters appear -- and after long enough, we should
 see faded cells.
+
+<!-- @wait_clear -->
+
+## Wrapping Up
+
+So that's the Gateway API, with canaries, A/B testing, and timeouts, managing
+a Gateway controller and a service mesh!
+
+If you have any questions or feedback, please feel free to reach out to us on
+the CNCF Slack, or via email to flynn@buoyant.io or mike.morris@microsoft.com.
+Gateway API is evolving, too, so keep an eye out for an updated version of
+this workshop in Salt Lake City!
