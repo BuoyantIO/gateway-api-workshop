@@ -34,11 +34,23 @@ k3d cluster create $CLUSTER \
 	-p "80:80@loadbalancer" -p "443:443@loadbalancer" \
 	--k3s-arg '--disable=traefik@server:*;agents:*'
 
-# Import cached images from local registry
-k3d image import -c $CLUSTER \
+# Import cached images from local registry, if present.
+for image in \
   docker.io/istio/proxyv2:1.20.3 \
   docker.io/istio/pilot:1.20.3 \
-  ghcr.io/buoyantio/faces-workload:1.0.0
+  ghcr.io/buoyantio/faces-workload:1.1.0 \
+  ghcr.io/buoyantio/faces-gui:1.1.0 \
+  cr.l5d.io/linkerd/policy-controller:edge-24.3.3 \
+  cr.l5d.io/linkerd/controller:edge-24.3.3 \
+  cr.l5d.io/linkerd/proxy:edge-24.3.3 \
+  cr.l5d.io/linkerd/proxy-init:v2.2.4 \
+  ; do \
+  c=$(docker images --format '{{ .Repository }}:{{ .Tag }}' | grep -c "$image") ;\
+  if [ $c -gt 0 ]; then \
+    echo "Loading $image from local cache" ;\
+    k3d image import -c $CLUSTER "$image" ;\
+  fi ;\
+done
 
 #@wait
 #@HIDE

@@ -17,7 +17,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if [[ -z ${DEMO_HOOK_ISTIO} ]]; then \
+set -e
+
+if [ "$DEMO_MESH" != "istio" ]; then \
 	echo "This script is for the Istio mesh only" >&2 ;\
 	exit 1 ;\
 fi

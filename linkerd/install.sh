@@ -17,7 +17,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if [ -z "$DEMO_HOOK_LINKERD" ]; then \
+set -e
+
+if [ "$DEMO_MESH" != "linkerd" ]; then \
 	echo "This script is for the Linkerd mesh only" >&2 ;\
 	exit 1 ;\
 fi
@@ -27,9 +29,13 @@ fi
 # Start by installing Linkerd and Linkerd Viz. We'll use the latest edge
 # release for this.
 
-curl --proto '=https' --tlsv1.2 -sSfL https://run.linkerd.io/install-edge | sh
-
-which linkerd
+#@HIDE
+if [[ -z ${DEMO_HOOK_OFFLINE} || -n ${DEMO_HOOK_DOWNLOAD_GATEWAY_API} ]]; then \
+  #@SHOW ;\
+curl --proto '=https' --tlsv1.2 -sSfL https://run.linkerd.io/install-edge | sh ;\
+  #@HIDE ;\
+fi
+#@SHOW
 
 linkerd check --pre
 linkerd install --crds | kubectl apply -f -
@@ -44,3 +50,5 @@ linkerd check
 # which is still a touch too new at the moment. Sigh.
 
 kubectl annotate namespace faces linkerd.io/inject="enabled"
+
+# And that's Linkerd installed!
