@@ -44,6 +44,9 @@ for image in \
   cr.l5d.io/linkerd/controller:edge-24.3.3 \
   cr.l5d.io/linkerd/proxy:edge-24.3.3 \
   cr.l5d.io/linkerd/proxy-init:v2.2.4 \
+  envoyproxy/envoy:distroless-v1.29.2 \
+  envoyproxy/gateway-dev:72c0cc7 \
+  docker.io/envoyproxy/gateway:v1.0.0 \
   ; do \
   c=$(docker images --format '{{ .Repository }}:{{ .Tag }}' | grep -c "$image") ;\
   if [ $c -gt 0 ]; then \
