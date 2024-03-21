@@ -30,7 +30,7 @@ fi
 # release for this.
 
 #@HIDE
-if [[ -z ${DEMO_HOOK_OFFLINE} || -n ${DEMO_HOOK_DOWNLOAD_GATEWAY_API} ]]; then \
+if [[ -z ${DEMO_HOOK_OFFLINE} || -n ${DEMO_HOOK_DOWNLOAD_LINKERD} ]]; then \
   #@SHOW ;\
 curl --proto '=https' --tlsv1.2 -sSfL https://run.linkerd.io/install-edge | sh ;\
   #@HIDE ;\
