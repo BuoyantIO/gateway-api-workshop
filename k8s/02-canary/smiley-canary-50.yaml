@@ -1,7 +1,7 @@
 apiVersion: gateway.networking.k8s.io/v1beta1
 kind: HTTPRoute
 metadata:
-  name: smiley-a-b
+  name: smiley-canary
   namespace: faces
 spec:
   parentRefs:
@@ -11,5 +11,9 @@ spec:
       port: 80
   rules:
   - backendRefs:
+    - name: smiley
+      port: 80
+      weight: 50
     - name: smiley2
       port: 80
+      weight: 50

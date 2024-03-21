@@ -16,3 +16,5 @@ spec:
     backendRefs:
     - name: face
       port: 80
+    timeouts:
+      request: 200ms

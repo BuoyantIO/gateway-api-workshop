@@ -18,10 +18,10 @@ spec:
         - name: FACES_SERVICE
           value: color
         - name: COLOR
-          value: blue
+          value: orange
         - name: DELAY_BUCKETS
           value: 0,5,10,15,20,50,200,500,1500
-        image: ghcr.io/buoyantio/faces-workload:1.0.0
+        image: ghcr.io/buoyantio/faces-workload:1.1.1
         imagePullPolicy: Always
         name: color
         ports:
