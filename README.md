@@ -26,13 +26,13 @@ running one of the following commands:
 [demosh]: https://github.com/BuoyantIO/demosh
 
 ```sh
-DEMO_HOOK_LINKERD=1 demosh README.md
+DEMO_MESH=linkerd demosh README.md
 ```
 
 OR
 
 ```sh
-DEMO_HOOK_ISTIO=1 demosh README.md
+DEMO_MESH=istio demosh README.md
 ```
 
 ---
@@ -85,14 +85,7 @@ After that, it's time to install the mesh!
 
 ```bash
 #@immed
-if [[ -n ${DEMO_HOOK_LINKERD} ]]; then \
-    $SHELL linkerd/install.sh ;\
-elif [[ -n ${DEMO_HOOK_ISTIO} ]]; then \
-    $SHELL istio/install.sh ;\
-else \
-    echo "IMPOSSIBLE: no mesh selected" >&2 ;\
-    exit 1 ;\
-fi
+$SHELL ${DEMO_MESH}/install.sh
 ```
 
 <!-- @wait_clear -->
@@ -115,14 +108,7 @@ kubectl apply -f experimental-install.yaml
 
 ```bash
 #@immed
-if [[ -n ${DEMO_HOOK_LINKERD} ]]; then \
-    $SHELL linkerd/create-gateway.sh ;\
-elif [[ -n ${DEMO_HOOK_ISTIO} ]]; then \
-    $SHELL istio/create-gateway.sh ;\
-else \
-    echo "IMPOSSIBLE: no mesh selected" >&2 ;\
-    exit 1 ;\
-fi
+$SHELL ${DEMO_MESH}/create-gateway.sh
 ```
 
 <!-- @wait_clear -->
