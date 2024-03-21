@@ -19,28 +19,14 @@
 
 set -e
 
-if [ "$DEMO_MESH" != "linkerd" ]; then \
-	echo "This script is for the Linkerd mesh only" >&2 ;\
+if [ "$DEMO_MESH" != "istio" ]; then \
+	echo "This script is for the Istio mesh only" >&2 ;\
 	exit 1 ;\
 fi
 
 #@SHOW
 
-# Start by installing Linkerd and Linkerd Viz. We'll use the latest edge
-# release for this.
+# Once that's done, we can set up the namespace for Faces, annotated for
+# Istio injection.
 
-#@HIDE
-if [[ -z ${DEMO_HOOK_OFFLINE} || -n ${DEMO_HOOK_DOWNLOAD_LINKERD} ]]; then \
-  #@SHOW ;\
-curl --proto '=https' --tlsv1.2 -sSfL https://run.linkerd.io/install-edge | sh ;\
-  #@HIDE ;\
-fi
-#@SHOW
-
-linkerd check --pre
-linkerd install --crds | kubectl apply -f -
-linkerd install | kubectl apply -f -
-linkerd viz install | kubectl apply -f -
-linkerd check
-
-# And that's Linkerd installed!
+kubectl label namespace faces istio-injection=enabled

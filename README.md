@@ -60,10 +60,10 @@ using the Gateway API. Our choices here are
 - Linkerd with Envoy Gateway, or
 - Istio (with Istio Gateway).
 
-We'll start by creating the namespace for Faces, to allow service-mesh setup
-to use it. Then we'll install the service mesh and the Gateway API CRDs, do
-any additional setup the ingress controller needs, and finally install the
-Faces application itself.
+We'll start by installing the service mesh and the Gateway API CRDs and do any
+additional setup the ingress controller needs. Next we'll create the namespace
+for our Faces demo app and set it up for mesh injection. Finally, we'll
+install the Faces demo application and get going!
 
 <!-- @wait -->
 
@@ -77,14 +77,7 @@ kubectl cluster-info
 
 ## Getting the Mesh Installed
 
-OK, off we go! Start by creating the namespace that we'll use for Faces. We do
-this first because we might need to use it during the mesh installation.
-
-```sh
-kubectl apply -f k8s/namespaces.yaml
-```
-
-After that, it's time to install the mesh!
+OK, off we go! Start by installing the mesh!
 
 ```bash
 #@immed
@@ -92,7 +85,16 @@ $SHELL ${DEMO_MESH}/install.sh
 ```
 
 <!-- @wait_clear -->
+Now create the namespace that we'll use for the Faces demo app and set
+it up for mesh sidecar injection.
 
+```sh
+kubectl apply -f k8s/namespaces.yaml
+#@immed
+$SHELL ${DEMO_MESH}/setup-namespace.sh
+```
+
+<!-- @wait_clear -->
 ## Creating the Gateway
 
 OK, the mesh is running now, so let's set up the Gateway API CRDs, then
