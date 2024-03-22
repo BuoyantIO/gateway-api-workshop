@@ -47,6 +47,7 @@ for image in \
   envoyproxy/envoy:distroless-v1.29.2 \
   envoyproxy/gateway-dev:72c0cc7 \
   docker.io/envoyproxy/gateway:v1.0.0 \
+  docker.io/prom/prometheus:v2.48.1 \
   ; do \
   c=$(docker images --format '{{ .Repository }}:{{ .Tag }}' | grep -c "$image") ;\
   if [ $c -gt 0 ]; then \
