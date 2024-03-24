@@ -133,7 +133,7 @@ that's what the two `errorFraction` flags are for.
 By default, the Faces app installs a `face` workload, which calls the `smiley`
 and `color` workloads. `smiley` returns a grinning face, and `color` returns
 blue. We'll also enable the `smiley2` and `color2` workloads, which we'll use
-later: `smiley2` returns a heart-eyed smiley, and `color2` returns orange.
+later: `smiley2` returns a heart-eyed smiley, and `color2` returns green.
 
 ```bash
 helm install faces \
@@ -203,7 +203,7 @@ Let's start by sending 10% of the traffic for the `color` workload to the
 bat k8s/02-canary/color-canary-10.yaml
 ```
 
-`color` returns blue and `color2` returns orange, so this should be easy to see
+`color` returns blue and `color2` returns green, so this should be easy to see
 from the moment we apply the resource.
 
 ```bash

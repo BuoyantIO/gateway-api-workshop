@@ -14,25 +14,25 @@ spec:
         service: color
     spec:
       containers:
-      - env:
-        - name: FACES_SERVICE
-          value: color
-        - name: COLOR
-          value: orange
-        - name: DELAY_BUCKETS
-          value: 0,5,10,15,20,50,200,500,1500
-        image: ghcr.io/buoyantio/faces-workload:1.1.1
-        imagePullPolicy: Always
-        name: color
-        ports:
-        - containerPort: 8000
-          name: http
-          protocol: TCP
-        resources:
-          limits:
-            cpu: 250m
-            memory: 128Mi
-          requests:
-            cpu: 100m
-            memory: 64Mi
+        - env:
+            - name: FACES_SERVICE
+              value: color
+            - name: COLOR
+              value: rgb(55 117 59) # Colorblind-friendly green from Tol palette
+            - name: DELAY_BUCKETS
+              value: 0,5,10,15,20,50,200,500,1500
+          image: ghcr.io/buoyantio/faces-workload:1.1.1
+          imagePullPolicy: Always
+          name: color
+          ports:
+            - containerPort: 8000
+              name: http
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 250m
+              memory: 128Mi
+            requests:
+              cpu: 100m
+              memory: 64Mi
       restartPolicy: Always
