@@ -26,7 +26,4 @@ fi
 
 #@SHOW
 
-# Once that's done, we can set up the namespace for Faces, annotated for
-# Istio injection.
-
 kubectl label namespace faces istio-injection=enabled

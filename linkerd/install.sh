@@ -27,7 +27,8 @@ fi
 #@SHOW
 
 # Start by installing Linkerd and Linkerd Viz. We'll use the latest edge
-# release for this.
+# release for this, and we'll explicitly tell Linkerd _not_ to install
+# Gateway API CRDs (that's the "--set enableHttpRoutes=false" flag).
 
 #@HIDE
 if [[ -z ${DEMO_HOOK_OFFLINE} || -n ${DEMO_HOOK_DOWNLOAD_LINKERD} ]]; then \
@@ -38,9 +39,9 @@ fi
 #@SHOW
 
 linkerd check --pre
-linkerd install --crds | kubectl apply -f -
-linkerd install | kubectl apply -f -
+linkerd install --crds --set enableHttpRoutes=false | kubectl apply -f -
+linkerd install --set enableHttpRoutes=false | kubectl apply -f -
 linkerd viz install | kubectl apply -f -
 linkerd check
 
-# And that's Linkerd installed!
+# And that's Linkerd ready to go!

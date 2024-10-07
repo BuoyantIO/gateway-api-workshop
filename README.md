@@ -14,6 +14,7 @@ is just before a commented `@SHOW` directive) will get displayed.
 
 ```bash
 BAT_STYLE="grid,numbers"
+DEMOSH_NO_BLURB=true
 ```
 
 <!-- @SKIP -->
@@ -73,11 +74,37 @@ First, we'll confirm that we're using the Kubernetes cluster we expect.
 kubectl cluster-info
 ```
 
+OK, so far so good!
+
+<!-- @wait_clear -->
+
+## Installing the Gateway API CRDs
+
+Gateway API is a CRD API: we need the CRDs to be present to use Gateway API.
+Additionally, we need to choose between the experimental channel and the
+standard channel: for this workshop, we'll use Gateway API v1.1.0
+Experimental. So let's get that installed first.
+
+**NOTE WELL** that Linkerd can't use the v1.2.0 experimental channel for the
+moment, because it doesn't have GRPCRoute `v1alpha2` any more.
+
+```bash
+#@HIDE
+if [[ -z ${DEMO_HOOK_OFFLINE} || -n ${DEMO_HOOK_DOWNLOAD_GATEWAY_API} ]]; then \
+  #@SHOW ;\
+  curl -LO https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.1.0/experimental-install.yaml ;\
+  #@HIDE ;\
+fi
+#@SHOW
+
+kubectl apply -f experimental-install.yaml
+```
+
 <!-- @wait_clear -->
 
 ## Getting the Mesh Installed
 
-OK, off we go! Start by installing the mesh!
+Once we have the CRDs, let's get our service mesh installed!
 
 ```bash
 #@immed
@@ -85,36 +112,9 @@ $SHELL ${DEMO_MESH}/install.sh
 ```
 
 <!-- @wait_clear -->
-Now create the namespace that we'll use for the Faces demo app and set
-it up for mesh sidecar injection.
-
-```sh
-kubectl apply -f k8s/namespaces.yaml
-#@immed
-$SHELL ${DEMO_MESH}/setup-namespace.sh
-```
-
-<!-- @wait_clear -->
 ## Creating the Gateway
 
-OK, the mesh is running now, so let's set up the Gateway API CRDs, then
-install our GatewayClass and Gateway.
-
-We install the Gateway API CRDs _after_ the mesh to make certain that the mesh
-installation isn't accidentally using Gateway API CRD versions that we don't
-want.
-
-```bash
-#@HIDE
-if [[ -z ${DEMO_HOOK_OFFLINE} || -n ${DEMO_HOOK_DOWNLOAD_GATEWAY_API} ]]; then \
-  #@SHOW ;\
-  curl -LO https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.0.0/experimental-install.yaml ;\
-  #@HIDE ;\
-fi
-#@SHOW
-
-kubectl apply -f experimental-install.yaml
-```
+OK, the mesh is running now, so let's install our GatewayClass and Gateway.
 
 ```bash
 #@immed
@@ -125,21 +125,37 @@ $SHELL ${DEMO_MESH}/create-gateway.sh
 
 ## Installing Faces
 
-OK! Finally, it's time to install Faces. We'll use Helm for this, too.
-Faces is usually installed so that it fails a lot, but since this workshop
-is about Gateway API, we'll install it so that it doesn't fail at all --
-that's what the two `errorFraction` flags are for.
+OK! Finally, it's time to install Faces. We'll start by setting up the
+namespace that Faces will use: first we create it...
 
-By default, the Faces app installs a `face` workload, which calls the `smiley`
-and `color` workloads. `smiley` returns a grinning face, and `color` returns
-blue. We'll also enable the `smiley2` and `color2` workloads, which we'll use
-later: `smiley2` returns a heart-eyed smiley, and `color2` returns green.
+```bash
+kubectl create namespace faces
+```
+
+...and then we'll set it up for mesh injection.
+
+```bash
+#@immed
+$SHELL ${DEMO_MESH}/setup-namespace.sh
+```
+
+Next up, we use Helm to install the Faces application. Faces is usually set up
+so that it fails a lot, but since this workshop is about Gateway API, we'll
+install it so that it doesn't fail at all -- that's what the two
+`errorFraction` flags are for.
+
+The Faces application works by installing a `face` workload which calls the
+`smiley` and `color` workloads. `smiley` returns a grinning face; `color`
+returns the color blue; `face` combines these and returns the combination to
+the GUI. We're going to also enable the `smiley2` and `color2` workloads,
+which we'll use later: `smiley2` returns a heart-eyed smiley, and `color2`
+returns green.
 
 ```bash
 helm install faces \
      -n faces \
      oci://ghcr.io/buoyantio/faces-chart \
-     --version 1.1.1 \
+     --version 2.0.0-dev.0 \
      --set face.errorFraction=0 \
      --set backend.errorFraction=0 \
      --set smiley2.enabled=true \

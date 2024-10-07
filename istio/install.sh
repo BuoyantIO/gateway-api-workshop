@@ -46,4 +46,4 @@ istioctl x precheck
 
 istioctl install --set profile=minimal -y
 
-# And that's Istio installed!
+# And that's Istio ready to go!

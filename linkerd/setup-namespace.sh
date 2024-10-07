@@ -26,10 +26,4 @@ fi
 
 #@SHOW
 
-# Once that's done, we can set up the namespace for Faces, annotated for
-# Linkerd injection. Sadly, we can't do the same for Envoy Gateway, since it
-# relies on a Job that will get hung up by the Linkerd sidecar -- KEP-753
-# makes this better, but it's not fully supported in Kubernetes prior to 1.28,
-# which is still a touch too new at the moment. Sigh.
-
-kubectl annotate namespace faces linkerd.io/inject="enabled"
+kubectl annotate namespace faces linkerd.io/inject=enabled
