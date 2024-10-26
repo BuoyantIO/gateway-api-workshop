@@ -2,28 +2,28 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: color
+  name: smiley
   namespace: faces
 spec:
   selector:
     matchLabels:
-      service: color
+      service: smiley
   template:
     metadata:
       labels:
-        service: color
+        service: smiley
     spec:
       containers:
         - env:
             - name: FACES_SERVICE
-              value: color
-            - name: COLOR
-              value: rgb(55 117 59) # Colorblind-friendly green from Tol palette
+              value: smiley
+            - name: SMILEY
+              value: HeartEyes
             - name: DELAY_BUCKETS
               value: 0,5,10,15,20,50,200,500,1500
-          image: ghcr.io/buoyantio/faces-workload:1.1.1
+          image: ghcr.io/buoyantio/faces-workload:2.0.0-rc.0
           imagePullPolicy: Always
-          name: color
+          name: smiley
           ports:
             - containerPort: 8000
               name: http

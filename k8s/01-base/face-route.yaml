@@ -12,7 +12,13 @@ spec:
   - matches:
     - path:
         type: PathPrefix
-        value: /face/
+        value: /face
+    filters:
+      - type: URLRewrite
+        urlRewrite:
+          path:
+            type: ReplacePrefixMatch
+            replacePrefixMatch: /
     backendRefs:
     - name: face
       port: 80
