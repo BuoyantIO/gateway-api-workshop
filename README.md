@@ -49,7 +49,7 @@ local k3d cluster.
 [`kubectl`]: https://kubernetes.io/docs/tasks/tools/#kubectl
 [k3d]: https://k3d.io/
 
-<!-- @SKIP -->
+<!-- @SHOW -->
 <!-- @clear -->
 
 # Configuring your service mesh with Gateway API
@@ -301,7 +301,8 @@ bat k8s/02-canary/smiley-edge.yaml
 kubectl apply -f k8s/02-canary/smiley-edge.yaml
 ```
 
-and we'll see that all the edge cells are now heart-eyed smilies!
+and we'll see that all the edge cells are now grinning smilies, while the
+center cells are still heart-eyed smilies.
 
 <!-- @wait_clear -->
 
