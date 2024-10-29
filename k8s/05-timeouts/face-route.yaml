@@ -8,11 +8,18 @@ spec:
   parentRefs:
     - name: ingress
       namespace: default
+      kind: Gateway
   rules:
   - matches:
     - path:
         type: PathPrefix
-        value: /face/
+        value: /face
+    filters:
+      - type: URLRewrite
+        urlRewrite:
+          path:
+            type: ReplacePrefixMatch
+            replacePrefixMatch: /
     backendRefs:
     - name: face
       port: 80

@@ -14,10 +14,10 @@ spec:
       - path:
           value: "/edge"
       backendRefs:
-        - name: smiley2
+        - name: smiley3
           port: 80
           weight: 50
-        - name: smiley3
+        - name: smiley2
           port: 80
           weight: 50
     - backendRefs:

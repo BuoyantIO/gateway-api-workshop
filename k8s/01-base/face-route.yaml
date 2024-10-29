@@ -8,6 +8,7 @@ spec:
   parentRefs:
     - name: ingress
       namespace: default
+      kind: Gateway
   rules:
   - matches:
     - path:

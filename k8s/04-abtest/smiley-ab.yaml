@@ -13,7 +13,7 @@ spec:
     - matches:
         - headers:
             - name: "x-faces-user"
-              value: "testuser"
+              value: "heart"
       backendRefs:
         - name: smiley2
           port: 80

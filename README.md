@@ -4,6 +4,9 @@ This is the documentation - and executable code! - for the Gateway API
 service mesh workshop at KubeCon EU 2024 in Paris, France.
 
 <!--
+SPDX-FileCopyrightText: 2022-2024 Buoyant Inc.
+SPDX-License-Identifier: Apache-2.0
+
 Things in Markdown comments are safe to ignore when reading this later. When
 executing this with [demosh], things after the horizontal rule below (which
 is just before a commented `@SHOW` directive) will get displayed.
@@ -49,6 +52,7 @@ local k3d cluster.
 [`kubectl`]: https://kubernetes.io/docs/tasks/tools/#kubectl
 [k3d]: https://k3d.io/
 
+---
 <!-- @SHOW -->
 <!-- @clear -->
 
@@ -116,7 +120,7 @@ Once we have the CRDs, let's get our service mesh installed!
 
 ```bash
 #@immed
-$SHELL ${DEMO_MESH}/install.sh
+$SHELL ${DEMO_MESH}/install.md
 ```
 
 <!-- @SHOW -->
@@ -128,7 +132,7 @@ OK, the mesh is running now, so let's install our GatewayClass and Gateway.
 
 ```bash
 #@immed
-$SHELL ${DEMO_MESH}/create-gateway.sh
+$SHELL ${DEMO_MESH}/create-gateway.md
 #@immed
 INGRESS_IP=$(bash ${DEMO_MESH}/get-ingress-ip.sh)
 #@immed
@@ -209,60 +213,188 @@ kubectl apply -f k8s/01-base/face-route.yaml
 ```
 
 And now, finally, our web browser should show us all grinning faces on blue
-backgrounds!
+backgrounds, because we've used Gateway API to tell our Gateway controller how
+to route traffic from outside the mesh to the Faces application!
+
+<!-- @wait_clear -->
+
+## Mesh Routing
+
+Next up: what can Gateway API do in the mesh?
+
+The simplest next step is the moral equivalent of the HTTPRoutes we just
+installed to allow ingress: unconditionally route traffic within the mesh.
+
+With ingress traffic, we used a `parentRef` to attach our HTTPRoute to the
+Gateway we created. For mesh traffic, we'll use a `parentRef` that points to a
+Service to intercept traffic to that Service. For example, here's the simplest
+HTTPRoute we can create for traffic to the `smiley` service:
+
+```bash
+bat k8s/02-unconditional/smiley-simplest.yaml
+```
+
+<!-- @wait -->
+
+We're not going to bother applying this route because it doesn't _do_
+anything: since it has no `backendRefs`, it'll just route traffic directed to
+the `smiley` service to... the `smiley` service. But if we add a `backendRef`,
+we can send the traffic somewhere else. For example, we could send all traffic
+meant for the `smiley` Service to `smiley2` instead:
+
+```bash
+bat k8s/02-unconditional/smiley-route.yaml
+```
+
+The `smiley2` workload returns a heart-eyed smiley instead of a grinning
+smiley, so when we apply that route, we'll immediately see all the cells
+change to heart-eyed smilies.
+
+```bash
+kubectl apply -f k8s/02-unconditional/smiley-route.yaml
+```
+
+<!-- @wait_clear -->
+
+## Mesh Routing
+
+We can do exactly the same for gRPC, too. In the Faces demo, the `face`
+workload uses HTTP to call `smiley`, but gRPC to call `color`. We can route
+all the `color` traffic over to `color2` using a simple GRPCRoute:
+
+```bash
+bat k8s/02-unconditional/color-route.yaml
+```
+
+`color` returns blue, but `color2` returns green, so when we apply this route,
+we'll see all the cells change to green.
+
+```bash
+kubectl apply -f k8s/02-unconditional/color-route.yaml
+```
+
+<!-- @wait_clear -->
+
+## Sidebar: Operational Concerns
+
+In practice, this kind of unconditional routing is usually not a great idea.
+For one thing, its all-at-once nature is dangerous: suppose we sent all the
+`smiley` traffic over to `smiley2` only to find that `smiley2` was broken? The
+only good thing about that situation is that we'd be able to shift back to
+`smiley` just as quickly.
+
+<!-- @wait -->
+
+(That's assuming that we noticed that `smiley2` was broken right away, of
+course. If we didn't, we'd have a lot of unhappy users before we figured out
+what was going on. Worst case, we would already have shut down `smiley`, and
+recovery would be that much harder.)
 
 <!-- @wait_clear -->
 
 ## Canaries
 
-So far, so good! But what else can we do with Gateway API?
+In the real world, a much smarter move is to randomly assign only a little bit
+of incoming traffic to a new workload. If things go well, we can gradually do
+more and more traffic until it's all shifted over. This is the _canary
+deployment_, which is the basis of _progressive delivery_.
 
-The simplest next step is a canary: randomly assign some traffic to a new
-workload. This is the basis of progressive delivery, and it's a great way to
-get started with Gateway API.
-
-Let's start by sending 10% of the traffic for the `smiley` workload to the
-`smiley2` workload instead.
+To demonstrate this with Gateway API, we'll first reset Faces by deleting our
+unconditional routes:
 
 ```bash
-bat k8s/02-canary/smiley-canary-10.yaml
+kubectl delete -n faces httproute smiley-route
+kubectl delete -n faces grpcroute color-route
 ```
 
-`smiley` returns a grinning smiley and `smiley2` returns a heart-eyed smiley,
-so this should be easy to see from the moment we apply the resource.
+We'll see all the cells go back to grinning smilies and blue backgrounds, and
+we can then start our canary demonstration by sending just 10% of the traffic
+meant for `smiley` to `smiley2`:
 
 ```bash
-kubectl apply -f k8s/02-canary/smiley-canary-10.yaml
+bat k8s/03-canary/smiley-canary-10.yaml
+```
+
+When we apply this, we'll start to see just a few heart-eyed smilies.
+
+```bash
+kubectl apply -f k8s/03-canary/smiley-canary-10.yaml
 ```
 
 We can change the fraction of traffic being diverted in realtime, simply by
 changing the weights in the HTTPRoute:
 
 ```bash
-diff -u99 --color k8s/02-canary/smiley-canary-{10,50}.yaml
-kubectl apply -f k8s/02-canary/smiley-canary-50.yaml
+diff -u99 --color k8s/03-canary/smiley-canary-{10,50}.yaml
+kubectl apply -f k8s/03-canary/smiley-canary-50.yaml
 ```
 
-We can even use weights to divert all the traffic to the new workload, once
-we're happy that things are working, and delete the old workload entirely.
+Once we're happy that all is well, that's when we switch _all_ the traffic
+over to `smiley2`:
 
 ```bash
-diff -u99 --color k8s/02-canary/smiley-canary-{50,100}.yaml
-kubectl apply -f k8s/02-canary/smiley-canary-100.yaml
-kubectl delete -n faces deploy/smiley
+diff -u99 --color k8s/03-canary/smiley-canary-{50,100}.yaml
+kubectl apply -f k8s/03-canary/smiley-canary-100.yaml
 ```
 
-Operationally, of course, this isn't a great state to leave things in. It's
-smarter to go ahead and deploy our new workload as `smiley` and then remove the
-nonintuitive routing, so that people don't get confused when they look a week
-later after forgetting what was done.
+To prove that the `smiley` workload isn't doing anything, we can scale it down
+to zero with no effect on what we see.
 
 ```bash
-bat k8s/02-canary/smiley-replacement.yaml
-kubectl apply -f k8s/02-canary/smiley-replacement.yaml
+kubectl scale -n faces deploy/smiley --replicas=0
+```
+
+<!-- @wait_clear -->
+
+## Sidebar: Operational Concerns
+
+It's worth calling out that we're now in a state that is _not_ a good idea,
+operationally speaking. To see why, imagine that it's six weeks later,
+something is going wrong with smilies, and the on-call engineer in the NOC is
+someone who wasn't at this workshop.
+
+They've been told that the first place to start is the `face` workload's logs,
+so they go there:
+
+```bash
+kubectl logs -n faces deploy/face -c face | head
+```
+
+"Great!" they think. "`face` must be getting smilies from `http://smiley`, so
+I can go look at the `smiley` workload to see what's up!"
+
+<!-- @wait -->
+
+This is where things start to go wrong. We who were at this workshop know that
+there's an HTTPRoute redirecting all the `smiley` traffic to `smiley2`, but
+our NOC engineer doesn't know that. They'll get _very_ confused when they
+realize that there aren't even any `smiley` pods to look at.
+
+<!-- @wait -->
+
+Hopefully they'll have been trained about Gateway API, of course! so hopefully
+they'll know to look for routes. But the right way to deal with this,
+operationally, is to deploy a `smiley` workload that returns heart-eyed
+smilies, then remove the nonintuitive routing. That way, anyone looking to see
+what's going on won't need to find the HTTPRoute in order to make sense of
+everything.
+
+<!-- @wait_clear -->
+
+## Sidebar: Operational Concerns
+
+For this workshop, though, we're not going to do that -- we'll just reset the
+world again by scaling `smiley` back up with grinning smilies and deleting our
+HTTPRoute:
+
+```bash
+kubectl scale -n faces deploy/smiley --replicas=1
 kubectl rollout status -n faces deploy
 kubectl delete -n faces httproute smiley-canary
 ```
+
+At this point, we're back to grinning smilies, and we're getting them from the
+`smiley` workload as we'd expect.
 
 <!-- @wait_clear -->
 
@@ -273,9 +405,22 @@ workload, and we can canary between `color` (blue) and `color2` (green) just
 as easily as we did for our smilies:
 
 ```bash
-bat k8s/02-canary/color-canary-50.yaml
-kubectl apply -f k8s/02-canary/color-canary-50.yaml
+bat k8s/03-canary/color-canary-25.yaml
+kubectl apply -f k8s/03-canary/color-canary-25.yaml
 ```
+
+We'll now see some green cells in the GUI, but still mostly blue. Of course,
+we can adjust the weights on the fly just like we did with the HTTPRoute:
+
+```bash
+diff -u99 --color k8s/03-canary/color-canary-{25,50}.yaml
+kubectl apply -f k8s/03-canary/color-canary-50.yaml
+```
+
+At this point we'll have a 50/50 split between blue and green cells. Let's
+leave it there for the moment while we see what else we can do.
+
+<!-- @wait_clear -->
 
 ## Dynamic Routing
 
@@ -285,36 +430,29 @@ parameters. In our previous example, we did a canary based on the Service to
 which the request was sent, but Faces also provides a different Path depending
 on whether it's making a request for an edge cell or a center cell.
 
-Let's send all the edge cells to `smiley2` instead of `smiley`. First, though,
-let's switch our `smiley2` workload back to returning a grinning smiley, so we
-can tell the difference.
+Let's send all the edge cells to `smiley2`, with its heart-eyed smilies. This
+should leave the center cells still calling `smiley`, so they should still
+show us grinning smilies.
 
 ```bash
-kubectl set env -n faces deploy smiley2 SMILEY-
-kubectl rollout status -n faces deploy
+bat k8s/03-canary/smiley-edge.yaml
+kubectl apply -f k8s/03-canary/smiley-edge.yaml
 ```
 
-So far, nothing has changed, but now we can set up the new routing:
-
-```bash
-bat k8s/02-canary/smiley-edge.yaml
-kubectl apply -f k8s/02-canary/smiley-edge.yaml
-```
-
-and we'll see that all the edge cells are now grinning smilies, while the
-center cells are still heart-eyed smilies.
+There we go: all the edge cells are showing us heart-eyed smilies, while the
+center cells are still grinning smilies.
 
 <!-- @wait_clear -->
 
 ## Dynamic Canarying
 
 We can combine this with a canary, of course. Here we'll send 50% of the edge
-traffic to `smiley2`, and the other half to `smiley3`, which returns a face
-with rolling eyes.
+traffic to `smiley3`, which returns rolling-eyes smilies, leaving the other
+half going to `smiley2` (heart-eyed smilies).
 
 ```bash
-bat k8s/02-canary/smiley-edge-canary-50.yaml
-kubectl apply -f k8s/02-canary/smiley-edge-canary-50.yaml
+bat k8s/03-canary/smiley-edge-canary-50.yaml
+kubectl apply -f k8s/03-canary/smiley-edge-canary-50.yaml
 ```
 
 <!-- @wait_clear -->
@@ -327,39 +465,44 @@ not what it should do. So let's roll back to the previous state -- nothing
 requires that you always take a canary to completion.
 
 To roll back, we'll just reapply the previous HTTPRoute, so that we still get
-grinning-face smileys for the edge cells.
+heart-eyed smileys for the edge cells.
 
 ```bash
-bat k8s/02-canary/smiley-edge.yaml
-kubectl apply -f k8s/02-canary/smiley-edge.yaml
+bat k8s/03-canary/smiley-edge.yaml
+kubectl apply -f k8s/03-canary/smiley-edge.yaml
 ```
 
-Of course, we could be even more drastic and just delete the HTTPRoute in this
-case, which will return the world back to all heart-eyed smilies.
+Now we're right back to the way things were, and we can fix the problem at our
+leisure without the stress of having our production traffic broken while we
+work on a fix.
+
+<!-- @wait -->
+
+And, of course, we could be even more drastic and just delete the HTTPRoute
+entirely. In this case, that will return the world back to all grinning
+smilies.
 
 ```bash
 kubectl delete -n faces httproute smiley-edge
 ```
 
-Now we're right back to the way things were, and we can fix the problem
-without it affecting production traffic.
-
 <!-- @wait_clear -->
 
 ## Dynamic Routing with gRPC
 
-We can also do dynamic routing with gRPC services. In the Faces demo, the
-`color` workload actually provides two separate gRPC methods: the `Center`
-method and the `Edge` method. We can route these to different workloads, just
-as we did with the `smiley` service:
+We can also do dynamic routing with gRPC services. Where the `smiley` workload
+uses two separate paths, the `color` workload provides two separate gRPC
+methods: the `Center` method and the `Edge` method. We can route these to
+different workloads, just as we did with the `smiley` service -- here we'll
+send all the edge cells to `color2`, which returns green.
 
 ```bash
-bat k8s/02-canary/color-edge.yaml
-kubectl apply -f k8s/02-canary/color-edge.yaml
+bat k8s/03-canary/color-edge.yaml
+kubectl apply -f k8s/03-canary/color-edge.yaml
 ```
 
-But wait -- we're still seeing green in the center cells. Any guesses as to
-why?
+Now we have all green cells at the edge -- but wait. We're still seeing some
+green in the center cells. Any guesses as to why?
 
 <!-- @wait_clear -->
 
@@ -376,6 +519,8 @@ the edge.
 ```bash
 kubectl delete -n faces grpcroute color-canary
 ```
+
+<!-- @wait_clear -->
 
 ## Immediate Effect
 
@@ -395,37 +540,40 @@ each persona needs to do are easily accessible to them.
 
 <!-- @wait_clear -->
 
-
-
-(We'll "fix" this problem with our `smiley2` by setting its error-fraction
-variable to zero, since we're going to want to use it shortly.)
-
-```bash
-kubectl set env -n faces deploy smiley2 ERROR_FRACTION-
-```
-
 ## A/B Testing
 
-Another common use case for Gateway API is A/B testing. This is like a canary
-in that you're still sending just part of your traffic to a new version of the
-workload, but instead of randomly selecting traffic, you're selecting based on
-some attribute of the request. We'll do this using the `X-Faces-User` header:
+Another common use case for Gateway API is A/B testing: sending just part of
+your traffic to a new destination, based on a header or some other attribute
+of the request. The classic example here is to base the decision on which user
+is logged in, so that's what we'll do... if "logged in" isn't too strong a
+term for a demo that lets you pick who you're logged in as with no
+authentication at all!
+
+Under the hood, when you enter a username in the Faces GUI, it sets the
+`X-Faces-User` header in the requests being sent. This header gets propagated
+everywhere in the app, so we can use it for A/B testing. Let's start by doing
+an A/B test for the `smiley` service: we'll arrange for the `heart` user to
+get heart-eyed smilies, and everyone else to get grinning smilies.
 
 ```bash
-bat k8s/03-abtest/smiley-ab.yaml
-kubectl apply -f k8s/03-abtest/smiley-ab.yaml
+bat k8s/04-abtest/smiley-ab.yaml
+kubectl apply -f k8s/04-abtest/smiley-ab.yaml
 ```
 
-We can see the effect by using two browsers for this, one that doesn't the
-header, and the other which sets `X-Faces-User` to `testuser`. The `testuser`
-browser should see heart-eyed smilies, but the other should not.
+The Faces GUI allows us to switch the user we're logged in as by editing the
+username above the cell grid (if "logged in" isn't too strong when there's no
+authentication whatsoever!) . We can best the effect of the A/B test by using
+two browsers for this, one logged in as `heart` and one logged in as anything
+else (or not logged in at all). Since the GUI sends the logged-in username as
+the value of the `X-Faces-User` header, the `heart` browser should see
+heart-eyed smilies, but the other should see grinning smilies.
 
 If we do this, and find that everyone really loves heart-eyed smilies, we can
 make sure of that by unconditionally routing all the traffic to `smiley2`:
 
 ```bash
-bat k8s/03-abtest/smiley2-unconditional.yaml
-kubectl apply -f k8s/03-abtest/smiley2-unconditional.yaml
+bat k8s/04-abtest/smiley2-unconditional.yaml
+kubectl apply -f k8s/04-abtest/smiley2-unconditional.yaml
 ```
 
 Normally, as noted before, you'd clean up the Deployments after this. For the
@@ -435,6 +583,38 @@ back to grinning smilies).
 ```bash
 kubectl delete -n faces httproute smiley-a-b
 ```
+
+<!-- @wait_clear -->
+
+## A/B Testing
+
+We can do the same trick with gRPC, too. Let's give all the `heart` users the
+dark-blue color from `color3`:
+
+```bash
+bat k8s/04-abtest/color-ab.yaml
+kubectl apply -f k8s/04-abtest/color-ab.yaml
+```
+
+Of course, we can mix that with an A/B test of `smiley`:
+
+```bash
+kubectl apply -f k8s/04-abtest/smiley-ab.yaml
+```
+
+In the real world, running multiple A/B tests simultaneously like this can be
+a bit of a mess, but the tooling supports it if you want to!
+
+For now, let's go ahead and shut the A/B tests down by deleting the routes:
+
+```bash
+kubectl delete -n faces httproute smiley-a-b
+kubectl delete -n faces grpcroute color-a-b
+```
+
+Once again, we'll be back to grinning faces on blue backgrounds.
+
+<!-- @wait_clear -->
 
 ## Timeouts
 
@@ -449,30 +629,17 @@ workload.
 
 <!-- @wait -->
 
-Unfortunately, timeouts are also the first thing we'll show that, for now, we
-have to do slightly differently in the different meshes. This is because
-Linkerd hasn't actually incorporated Gateway API 1.0 yet, so where Istio can
-use the official Gateway API HTTPRoute with timeouts, Linkerd needs to use its
-own policy.linkerd.io HTTPRoute. This will be changing soon!
+Unfortunately, for now, we have to do timeouts slightly differently in the
+different meshes. Linkerd's policy for supporting Kubernetes versions means
+that it hasn't yet been able to switch to Gateway API 1.0 yet, so Linkerd uses
+its own `policy.linkerd.io` HTTPRoute for timeout support. Istio, on the other
+hand, uses the official Gateway API HTTPRoute.
 
 <!-- @wait -->
 
-We'll start by adding a timeout to the color service. This timeout will give
-agency to the face service, as the client of the color service: when a call to
-the color service takes too long, the face service will show a pink background
-for that cell.
-
-```bash
-bat k8s/04-timeouts/color-timeout-${DEMO_MESH}.yaml
-kubectl apply -f k8s/04-timeouts/color-timeout-${DEMO_MESH}.yaml
-```
-
-We should start seeing some pink cells appearing!
-
-<!-- @wait -->
-
-Let's continue by adding a timeout to the smiley service. The face service
-will show a smiley-service timeout as a sleeping face.
+We'll start by adding a timeout to the `smiley` Service. If the `face`
+workload's request to `smiley` times out, the GUI will show this as a sleeping
+face.
 
 ```bash
 bat k8s/04-timeouts/smiley-timeout-${DEMO_MESH}.yaml
@@ -481,8 +648,8 @@ kubectl apply -f k8s/04-timeouts/smiley-timeout-${DEMO_MESH}.yaml
 
 <!-- @wait_clear -->
 
-Finally, we'll add a timeout that lets the GUI decide what to do if the face
-service itself takes too long. When the GUI sees a timeout talking to the face
+Finally, we'll add a timeout for the GUI's calls to `face` itself. We'll do
+this a bit differently: when the GUI sees a timeout talking to the face
 service, it will just keep showing the user the old data for awhile. There are
 a lot of applications where this makes an enormous amount of sense: if you
 can't get updated data, the most recent data may still be valuable for some
@@ -495,19 +662,27 @@ make it a little more clear what's going on.
 
 <!-- @wait -->
 
-We'll use the Gateway controller to implement this timeout, rather than the
+We'll use our Gateway controller to implement this timeout, rather than the
 mesh, illustrating that there can be a lot of overlap between these two
-components. Also note that since we already have an HTTPRoute for the
-`/face/` path, we'll need to add the timeout to that route, rather than
-creating a new one.
+components. Also note that we already have an HTTPRoute for the `/face/` path,
+so we'll add the timeout to that route, rather than creating a new one.
 
 ```bash
-diff -u99 --color k8s/{01-base,04-timeouts}/face-route.yaml
+diff -u99 --color k8s/{01-base,05-timeouts}/face-route.yaml
 kubectl apply -f k8s/04-timeouts/face-route.yaml
 ```
 
 We should now start seeing counters appear -- and after long enough, we should
 see faded cells.
+
+<!-- @wait_clear -->
+
+## What About the `Color` Workload?
+
+We can't actually demonstrate a timeout on the `color` workload, because
+Gateway API doesn't yet include GRPCRoute timeouts...
+
+...but cross your fingers for them at KubeCon in London!
 
 <!-- @wait_clear -->
 
@@ -518,5 +693,5 @@ a Gateway controller and a service mesh!
 
 If you have any questions or feedback, please feel free to reach out to us on
 the CNCF Slack, or via email to flynn@buoyant.io or mike.morris@microsoft.com.
-Gateway API is evolving, too, so keep an eye out for an updated version of
-this workshop in Salt Lake City!
+Gateway API is evolving, too, so keep an eye out for more at KubeCon in
+London!

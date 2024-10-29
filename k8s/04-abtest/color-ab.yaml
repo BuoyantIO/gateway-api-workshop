@@ -1,0 +1,24 @@
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: GRPCRoute
+metadata:
+  name: color-a-b
+  namespace: faces
+spec:
+  parentRefs:
+    - name: color
+      kind: Service
+      group: ""
+      port: 80
+  rules:
+    - matches:
+      - method:
+          service: ColorService
+        headers:
+          - name: "x-faces-user"
+            value: "heart"
+      backendRefs:
+        - name: color3
+          port: 80
+    - backendRefs:
+        - name: color
+          port: 80
