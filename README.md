@@ -154,7 +154,7 @@ kubectl create namespace faces
 
 ```bash
 #@immed
-$SHELL ${DEMO_MESH}/setup-namespace.sh
+$SHELL ${DEMO_MESH}/setup-namespace.md
 ```
 
 Next up, we use Helm to install the Faces application. The Faces application
@@ -172,7 +172,7 @@ look at so we won't show it here.
 helm install faces \
      -n faces \
      oci://ghcr.io/buoyantio/faces-chart \
-     --version 2.0.0-rc.0 \
+     --version 2.0.0-rc.1 \
      --values faces/values.yaml
 ```
 
@@ -185,7 +185,7 @@ kubectl rollout status -n faces deploy
 ...and then we should be able to go to Faces GUI in the web browser, at
 http://${INGRESS_IP}/gui/, and see good things!
 
-<!-- @wait -->
+<!-- @wait_clear -->
 
 ## The Ingress Problem
 
@@ -562,11 +562,11 @@ kubectl apply -f k8s/04-abtest/smiley-ab.yaml
 
 The Faces GUI allows us to switch the user we're logged in as by editing the
 username above the cell grid (if "logged in" isn't too strong when there's no
-authentication whatsoever!) . We can best the effect of the A/B test by using
-two browsers for this, one logged in as `heart` and one logged in as anything
-else (or not logged in at all). Since the GUI sends the logged-in username as
-the value of the `X-Faces-User` header, the `heart` browser should see
-heart-eyed smilies, but the other should see grinning smilies.
+authentication whatsoever!) . We can best see the effect of the A/B test by
+using two browsers for this, one logged in as `heart` and one logged in as
+anything else (or not logged in at all). Since the GUI sends the logged-in
+username as the value of the `X-Faces-User` header, the `heart` browser should
+see heart-eyed smilies, but the other should see grinning smilies.
 
 If we do this, and find that everyone really loves heart-eyed smilies, we can
 make sure of that by unconditionally routing all the traffic to `smiley2`:
@@ -596,7 +596,42 @@ bat k8s/04-abtest/color-ab.yaml
 kubectl apply -f k8s/04-abtest/color-ab.yaml
 ```
 
-Of course, we can mix that with an A/B test of `smiley`:
+Now we have dark blue cells at the center -- but we're still seeing green at
+the edges? Why is that?
+
+<!-- @wait_clear -->
+
+## Conflict Resolution
+
+This is another aspect of the conflict resolution rules. We currently have two
+GRPCRoutes in play:
+
+```bash
+kubectl get -n faces grpcroute
+```
+
+`color-a-b` is doing our A/B test: it specifies matches on the gRPC Service
+and a header. `color-edge` is doing our edge/cell routing: it specifies
+matches on the gRPC Service and the gRPC method. These are basically
+equivalent in terms of specificity, so the _older route wins_ -- and for the
+edge cells where `color-edge` matches, `color-edge` is older than `color-a-b`.
+
+Deleting `color-edge` will let us see all dark blue cells.
+
+```bash
+kubectl delete -n faces grpcroute color-edge
+```
+
+The conflict resolution rules are a critical part of Gateway API, but they're
+not always intuitive -- once multiple rules are in play, testing is very
+important.
+
+<!-- @wait_clear -->
+
+## A/B Testing
+
+Back to our A/B test, there's nothing preventing us from doing an A/B test of
+`smiley` at the same time as `color`:
 
 ```bash
 kubectl apply -f k8s/04-abtest/smiley-ab.yaml
@@ -642,8 +677,8 @@ workload's request to `smiley` times out, the GUI will show this as a sleeping
 face.
 
 ```bash
-bat k8s/04-timeouts/smiley-timeout-${DEMO_MESH}.yaml
-kubectl apply -f k8s/04-timeouts/smiley-timeout-${DEMO_MESH}.yaml
+bat k8s/05-timeouts/smiley-timeout-${DEMO_MESH}.yaml
+kubectl apply -f k8s/05-timeouts/smiley-timeout-${DEMO_MESH}.yaml
 ```
 
 <!-- @wait_clear -->
@@ -669,7 +704,7 @@ so we'll add the timeout to that route, rather than creating a new one.
 
 ```bash
 diff -u99 --color k8s/{01-base,05-timeouts}/face-route.yaml
-kubectl apply -f k8s/04-timeouts/face-route.yaml
+kubectl apply -f k8s/05-timeouts/face-route.yaml
 ```
 
 We should now start seeing counters appear -- and after long enough, we should
@@ -688,10 +723,12 @@ Gateway API doesn't yet include GRPCRoute timeouts...
 
 ## Wrapping Up
 
-So that's the Gateway API, with canaries, A/B testing, and timeouts, managing
-a Gateway controller and a service mesh!
+So that's the Gateway API, with HTTP and gRPC canaries, A/B testing, and
+timeouts, managing a Gateway controller and a service mesh!
 
 If you have any questions or feedback, please feel free to reach out to us on
 the CNCF Slack, or via email to flynn@buoyant.io or mike.morris@microsoft.com.
 Gateway API is evolving, too, so keep an eye out for more at KubeCon in
 London!
+
+<!-- @wait -->
