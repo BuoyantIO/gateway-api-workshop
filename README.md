@@ -1,7 +1,7 @@
-# Configuring your service mesh with Gateway API
+# Live with Gateway API
 
 This is the documentation - and executable code! - for the Gateway API
-service mesh workshop at KubeCon EU 2024 in Paris, France.
+service mesh workshop at KubeCon NA 2024 in Salt Lake City, Utah.
 
 <!--
 SPDX-FileCopyrightText: 2022-2024 Buoyant Inc.
@@ -12,6 +12,8 @@ executing this with [demosh], things after the horizontal rule below (which
 is just before a commented `@SHOW` directive) will get displayed.
 -->
 
+<!-- @SHOW -->
+<!-- @HIDE -->
 <!-- set -e >
 <!-- @import demosh/check-requirements.sh -->
 
@@ -63,7 +65,7 @@ cluster, using a service mesh and an ingress controller that we'll configure
 using the Gateway API. Our choices here are
 
 - Linkerd with Envoy Gateway, or
-- Istio (with Istio Gateway).
+- Istio (with Istio Ingress Gateway).
 
 We'll start by installing the service mesh and the Gateway API CRDs and do any
 additional setup the ingress controller needs. Next we'll create the namespace
@@ -86,30 +88,22 @@ OK, so far so good!
 
 Gateway API is a CRD API: we need the CRDs to be present to use Gateway API.
 Additionally, we need to choose between the experimental channel and the
-standard channel: for this workshop, we'll use Gateway API v1.1.0
-Experimental. (At the moment, Linkerd can't use the v1.2.0 experimental
+standard channel - for this workshop, we'll use Gateway API v1.1.1
+experimental. (At the moment, Linkerd can't use the v1.2.0 experimental
 channel, because it doesn't have GRPCRoute `v1alpha2` any more.)
 
-So let's get v1.1.0 experimental installed first. This repo contains the
+So let's get v1.1.1 experimental installed first. This repo contains the
 YAML for that already, pre-downloaded from
 
-```
-https://github.com/kubernetes-sigs/gateway-api/releases/
-    download/v1.1.0/experimental-install.yaml
+```text
+https://github.com/kubernetes-sigs/gateway-api/releases/\
+download/v1.1.1/experimental-install.yaml
 ```
 
 so we can just apply it:
 
 ```bash
 kubectl apply -f gateway-api/experimental-install.yaml
-```
-
-Unfortunately, Gateway API v1.1.0 also contains a bug: the `status` stanza of
-GRPCRoute `v1alpha2` isn't correctly marked as a subresource. We'll fix that
-by applying the GRPCRoute YAML from Gateway API's PR#3412:
-
-```bash
-kubectl apply -f gateway-api/gateway.networking.k8s.io_grpcroutes.yaml
 ```
 
 <!-- @wait_clear -->
@@ -325,7 +319,7 @@ We can change the fraction of traffic being diverted in realtime, simply by
 changing the weights in the HTTPRoute:
 
 ```bash
-diff -u99 --color k8s/03-canary/smiley-canary-{10,50}.yaml
+diff -u99 --color=always k8s/03-canary/smiley-canary-{10,50}.yaml
 kubectl apply -f k8s/03-canary/smiley-canary-50.yaml
 ```
 
@@ -333,7 +327,7 @@ Once we're happy that all is well, that's when we switch _all_ the traffic
 over to `smiley2`:
 
 ```bash
-diff -u99 --color k8s/03-canary/smiley-canary-{50,100}.yaml
+diff -u99 --color=always k8s/03-canary/smiley-canary-{50,100}.yaml
 kubectl apply -f k8s/03-canary/smiley-canary-100.yaml
 ```
 
@@ -413,7 +407,7 @@ We'll now see some green cells in the GUI, but still mostly blue. Of course,
 we can adjust the weights on the fly just like we did with the HTTPRoute:
 
 ```bash
-diff -u99 --color k8s/03-canary/color-canary-{25,50}.yaml
+diff -u99 --color=always k8s/03-canary/color-canary-{25,50}.yaml
 kubectl apply -f k8s/03-canary/color-canary-50.yaml
 ```
 
@@ -703,7 +697,7 @@ components. Also note that we already have an HTTPRoute for the `/face/` path,
 so we'll add the timeout to that route, rather than creating a new one.
 
 ```bash
-diff -u99 --color k8s/{01-base,05-timeouts}/face-route.yaml
+diff -u99 --color=always k8s/{01-base,05-timeouts}/face-route.yaml
 kubectl apply -f k8s/05-timeouts/face-route.yaml
 ```
 
@@ -727,7 +721,7 @@ So that's the Gateway API, with HTTP and gRPC canaries, A/B testing, and
 timeouts, managing a Gateway controller and a service mesh!
 
 If you have any questions or feedback, please feel free to reach out to us on
-the CNCF Slack, or via email to flynn@buoyant.io or mike.morris@microsoft.com.
+the CNCF Slack, or via email to <flynn@buoyant.io> or <mike.morris@microsoft.com>.
 Gateway API is evolving, too, so keep an eye out for more at KubeCon in
 London!
 
