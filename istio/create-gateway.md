@@ -21,7 +21,7 @@ fi
 
 <!-- @SHOW -->
 
-Now, create a Kubernetes Gateway using the "istio" GatewayClass.
+We'll create a Kubernetes Gateway using the "istio" GatewayClass.
 
 ```bash
 bat istio/gateway.yaml

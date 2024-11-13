@@ -22,9 +22,11 @@ fi
 
 <!-- @SHOW -->
 
-For Istio, we need to annotate the `faces` namespace to get it to be
-injected.
+For Istio, we need to annotate the `faces` namespace for sidecars to be
+injected. (Ambient mode uses a similar mechanism to enroll a namespace into the
+mesh.)
 
 ```bash
 kubectl label namespace faces istio-injection=enabled
+# kubectl label namespace faces istio.io/dataplane-mode=ambient
 ```

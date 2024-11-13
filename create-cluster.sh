@@ -51,6 +51,7 @@ for image in \
   prom/prometheus:v2.48.1 \
   docker.io/istio/proxyv2:1.23.3 \
   docker.io/istio/pilot:1.23.3 \
+  docker.io/istio/ztunnel:1.23.3 \
   ; do \
   c=$(docker images --format '{{ .Repository }}:{{ .Tag }}' | grep -c "$image") ;\
   if [ $c -gt 0 ]; then \
