@@ -47,7 +47,6 @@ we can create our own gateway.
 
 ```bash
 istioctl install --set profile=minimal -y
-# istioctl install --set profile=ambient -y
 ```
 
 And that's Istio ready to go!
