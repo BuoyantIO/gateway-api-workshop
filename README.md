@@ -16,11 +16,12 @@ is just before a commented `@SHOW` directive) will get displayed.
 <!-- @HIDE -->
 <!-- set -e >
 <!-- @import demosh/check-requirements.sh -->
-
+<!--
 ```bash
 BAT_STYLE="grid,numbers"
 DEMOSH_NO_BLURB=true
 ```
+-->
 
 <!-- @SKIP -->
 
