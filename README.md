@@ -66,7 +66,7 @@ cluster, using a service mesh and an ingress controller that we'll configure
 using the Gateway API. Our choices here are
 
 - Linkerd with Envoy Gateway, or
-- Istio (with Istio Ingress Gateway).
+- Istio (with Istio ingress gateway)
 
 We'll start by installing the service mesh and the Gateway API CRDs and do any
 additional setup the ingress controller needs. Next we'll create the namespace
@@ -89,8 +89,8 @@ OK, so far so good!
 
 Gateway API is a CRD API: we need the CRDs to be present to use Gateway API.
 Additionally, we need to choose between the experimental channel and the
-standard channel - for this workshop, we'll use Gateway API v1.1.1
-experimental. (At the moment, Linkerd can't use the v1.2.0 experimental
+standard channel - for this workshop, we'll use the experimental channel of
+Gateway API v1.1.1. (At the moment, Linkerd can't use the v1.2.0 experimental
 channel, because it doesn't have GRPCRoute `v1alpha2` any more.)
 
 So let's get v1.1.1 experimental installed first. This repo contains the
@@ -138,14 +138,14 @@ echo "Ingress is running at $INGRESS_IP"
 
 ## Installing Faces
 
-OK! Finally, it's time to install Faces. We'll start by setting up the
-namespace that Faces will use: first we create it...
+OK! It's time to install the Faces demo application. We'll start by setting up
+the namespace that Faces will use: first we create it...
 
 ```bash
 kubectl create namespace faces
 ```
 
-...and then we'll set it up for mesh injection.
+...and then we'll set it up for mesh enrollment.
 
 ```bash
 #@immed
@@ -178,7 +178,7 @@ kubectl rollout status -n faces deploy
 ```
 
 ...and then we should be able to go to Faces GUI in the web browser, at
-http://${INGRESS_IP}/gui/, and see good things!
+<http://${INGRESS_IP}/gui/> (or <http://localhost/gui/> for some local cluster setups), and see good things (hopefully)!
 
 <!-- @wait_clear -->
 
@@ -186,7 +186,7 @@ http://${INGRESS_IP}/gui/, and see good things!
 
 OK, well, that didn't work. The reason is that we haven't actually told our
 Gateway controller how to direct traffic to the GUI. We need to create an
-HTTPRoute to do that -- specifically, anything with a path starting with
+HTTPRoute to do that - specifically, any HTTP request with a path starting with
 `/gui` should go to the `faces-gui` service. This gives your web browser a way
 to download the GUI code itself.
 
@@ -197,10 +197,10 @@ kubectl apply -f k8s/01-base/gui-route.yaml
 
 If we try the web browser again, we should now get the GUI! But we'll see all
 grimacing faces on purple backgrounds. This is because the GUI, for each cell,
-tries to request the `/face/` path, which we haven't routed yet.
+tries to request the `/face/` path, which we haven't added a route for yet.
 
-To tackle that, we'll route anything with a path starting with `/face` to the
-`face` service.
+To tackle that, we'll create another HTTPRoute to direct any request with a
+path starting with `/face` to the `face` service.
 
 ```bash
 bat k8s/01-base/face-route.yaml
@@ -213,7 +213,7 @@ to route traffic from outside the mesh to the Faces application!
 
 <!-- @wait_clear -->
 
-## Mesh Routing
+## Mesh Routing with HTTP
 
 Next up: what can Gateway API do in the mesh?
 
@@ -251,7 +251,7 @@ kubectl apply -f k8s/02-unconditional/smiley-route.yaml
 
 <!-- @wait_clear -->
 
-## Mesh Routing
+## Mesh Routing with gRPC
 
 We can do exactly the same for gRPC, too. In the Faces demo, the `face`
 workload uses HTTP to call `smiley`, but gRPC to call `color`. We can route
@@ -270,7 +270,7 @@ kubectl apply -f k8s/02-unconditional/color-route.yaml
 
 <!-- @wait_clear -->
 
-## Sidebar: Operational Concerns
+## Operational Concerns
 
 In practice, this kind of unconditional routing is usually not a great idea.
 For one thing, its all-at-once nature is dangerous: suppose we sent all the
@@ -341,12 +341,12 @@ kubectl scale -n faces deploy/smiley --replicas=0
 
 <!-- @wait_clear -->
 
-## Sidebar: Operational Concerns
+## Operational Concerns
 
 It's worth calling out that we're now in a state that is _not_ a good idea,
 operationally speaking. To see why, imagine that it's six weeks later,
-something is going wrong with smilies, and the on-call engineer in the NOC is
-someone who wasn't at this workshop.
+something is going wrong with smilies, and the on-call engineer is someone who
+wasn't at this workshop.
 
 They've been told that the first place to start is the `face` workload's logs,
 so they go there:
@@ -362,7 +362,7 @@ I can go look at the `smiley` workload to see what's up!"
 
 This is where things start to go wrong. We who were at this workshop know that
 there's an HTTPRoute redirecting all the `smiley` traffic to `smiley2`, but
-our NOC engineer doesn't know that. They'll get _very_ confused when they
+our on-call engineer doesn't know that. They'll get _very_ confused when they
 realize that there aren't even any `smiley` pods to look at.
 
 <!-- @wait -->
@@ -376,7 +376,7 @@ everything.
 
 <!-- @wait_clear -->
 
-## Sidebar: Operational Concerns
+## Operational Concerns
 
 For this workshop, though, we're not going to do that -- we'll just reset the
 world again by scaling `smiley` back up with grinning smilies and deleting our
@@ -555,9 +555,8 @@ bat k8s/04-abtest/smiley-ab.yaml
 kubectl apply -f k8s/04-abtest/smiley-ab.yaml
 ```
 
-The Faces GUI allows us to switch the user we're logged in as by editing the
-username above the cell grid (if "logged in" isn't too strong when there's no
-authentication whatsoever!) . We can best see the effect of the A/B test by
+The Faces GUI allows us to switch the user we're "logged in" as by editing the
+username above the cell grid. We can best see the effect of the A/B test by
 using two browsers for this, one logged in as `heart` and one logged in as
 anything else (or not logged in at all). Since the GUI sends the logged-in
 username as the value of the `X-Faces-User` header, the `heart` browser should
@@ -660,10 +659,9 @@ workload.
 <!-- @wait -->
 
 Unfortunately, for now, we have to do timeouts slightly differently in the
-different meshes. Linkerd's policy for supporting Kubernetes versions means
-that it hasn't yet been able to switch to Gateway API 1.0 yet, so Linkerd uses
-its own `policy.linkerd.io` HTTPRoute for timeout support. Istio, on the other
-hand, uses the official Gateway API HTTPRoute.
+different meshes. Linkerd currently uses its own `policy.linkerd.io` HTTPRoute
+for timeout support. Istio, on the other hand, uses the timeouts field in the
+official Gateway API HTTPRoute.
 
 <!-- @wait -->
 
@@ -722,7 +720,7 @@ So that's the Gateway API, with HTTP and gRPC canaries, A/B testing, and
 timeouts, managing a Gateway controller and a service mesh!
 
 If you have any questions or feedback, please feel free to reach out to us on
-the CNCF Slack, or via email to <flynn@buoyant.io> or <mike.morris@microsoft.com>.
+Kubernetes Slack, or via email to <flynn@buoyant.io> or <mike.morris@microsoft.com>.
 Gateway API is evolving, too, so keep an eye out for more at KubeCon in
 London!
 
