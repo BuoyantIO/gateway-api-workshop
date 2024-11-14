@@ -89,7 +89,7 @@ OK, so far so good!
 
 Gateway API is a CRD API: we need the CRDs to be present to use Gateway API.
 Additionally, we need to choose between the experimental channel and the
-standard channel - for this workshop, we'll use the experimental channel of
+standard channel: for this workshop, we'll use the experimental channel of
 Gateway API v1.1.1. (At the moment, Linkerd can't use the v1.2.0 experimental
 channel, because it doesn't have GRPCRoute `v1alpha2` any more.)
 
@@ -98,7 +98,7 @@ YAML for that already, pre-downloaded from
 
 ```text
 https://github.com/kubernetes-sigs/gateway-api/releases/\
-download/v1.1.1/experimental-install.yaml
+    download/v1.1.1/experimental-install.yaml
 ```
 
 so we can just apply it:
