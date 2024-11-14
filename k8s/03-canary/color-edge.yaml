@@ -1,0 +1,22 @@
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: GRPCRoute
+metadata:
+  name: color-edge
+  namespace: faces
+spec:
+  parentRefs:
+    - name: color
+      kind: Service
+      group: ""
+      port: 80
+  rules:
+    - matches:
+      - method:
+          service: ColorService
+          method: Edge
+      backendRefs:
+        - name: color2
+          port: 80
+    - backendRefs:
+        - name: color
+          port: 80

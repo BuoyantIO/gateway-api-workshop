@@ -36,18 +36,22 @@ k3d cluster create $CLUSTER \
 
 # Import cached images from local registry, if present.
 for image in \
-  docker.io/istio/proxyv2:1.20.3 \
-  docker.io/istio/pilot:1.20.3 \
-  ghcr.io/buoyantio/faces-workload:1.1.0 \
-  ghcr.io/buoyantio/faces-gui:1.1.0 \
-  cr.l5d.io/linkerd/policy-controller:edge-24.3.3 \
-  cr.l5d.io/linkerd/controller:edge-24.3.3 \
-  cr.l5d.io/linkerd/proxy:edge-24.3.3 \
-  cr.l5d.io/linkerd/proxy-init:v2.2.4 \
-  envoyproxy/envoy:distroless-v1.29.2 \
-  envoyproxy/gateway-dev:72c0cc7 \
-  docker.io/envoyproxy/gateway:v1.0.0 \
-  docker.io/prom/prometheus:v2.48.1 \
+  cr.l5d.io/linkerd/controller:edge-24.10.4 \
+  cr.l5d.io/linkerd/metrics-api:edge-24.10.4 \
+  cr.l5d.io/linkerd/policy-controller:edge-24.10.4 \
+  cr.l5d.io/linkerd/proxy-init:v2.4.1 \
+  cr.l5d.io/linkerd/proxy:edge-24.10.4 \
+  cr.l5d.io/linkerd/tap:edge-24.10.4 \
+  cr.l5d.io/linkerd/web:edge-24.10.4 \
+  docker.io/envoyproxy/gateway:v1.1.2 \
+  envoyproxy/envoy:distroless-v1.31.2 \
+  ghcr.io/buoyantio/faces-color:2.0.0 \
+  ghcr.io/buoyantio/faces-gui:2.0.0 \
+  ghcr.io/buoyantio/faces-workload:2.0.0 \
+  prom/prometheus:v2.48.1 \
+  docker.io/istio/proxyv2:1.23.3 \
+  docker.io/istio/pilot:1.23.3 \
+  docker.io/istio/ztunnel:1.23.3 \
   ; do \
   c=$(docker images --format '{{ .Repository }}:{{ .Tag }}' | grep -c "$image") ;\
   if [ $c -gt 0 ]; then \
