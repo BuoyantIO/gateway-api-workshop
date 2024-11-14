@@ -676,6 +676,8 @@ kubectl apply -f k8s/05-timeouts/smiley-timeout-${DEMO_MESH}.yaml
 
 <!-- @wait_clear -->
 
+## Timeouts
+
 Finally, we'll add a timeout for the GUI's calls to `face` itself. We'll do
 this a bit differently: when the GUI sees a timeout talking to the face
 service, it will just keep showing the user the old data for awhile. There are
